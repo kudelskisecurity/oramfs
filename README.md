@@ -81,6 +81,14 @@ To unmount the ORAM:
 oramfs umount myoram
 ```
 
+To enlarge the ORAM, make sure it is unmounted first, then double its size:
+
+```
+oramfs enlarge myoram
+```
+
+Then it can be mounted as usual and its size will be larger than before.
+
 # How does it work?
 
 Instead of implementing a full filesystem, `oramfs` only provides a mounted file. Therefore, the user is expected to
