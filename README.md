@@ -286,7 +286,7 @@ Code should be formatted with rustfmt
 
 # License and Copyright
 
-Copyright(c) 2020 Nagravision SA.
+Copyright(c) 2021 Nagravision SA.
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License version 3 as published by the Free Software Foundation.
 
