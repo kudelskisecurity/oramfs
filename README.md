@@ -247,6 +247,13 @@ RUSTFLAGS="-Ctarget-cpu=native" cargo build --release
 
 An executable will be produced in `target/release/oramfs`.
 
+# Configuration
+
+The main configuration file is located at `~/.config/oramfs/oramfs.yml`. Existing ORAM profiles can be modified by
+simply editing that file. For example, the ORAM scheme could be changed from `pathoram` to `fakeoram`. For a description
+of all the options, see `oramfs add --help`. Note that changing these options probably require re-initializing the ORAM,
+and therefore, it's not possible to change those options without losing the data in an existing ORAM.
+
 # Advanced Usage
 
 Note that `oramfs` requires to be run as root. The reason for this is that this software relies on an external
