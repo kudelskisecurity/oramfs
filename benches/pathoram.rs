@@ -1,6 +1,6 @@
-use criterion::{Criterion, criterion_group, criterion_main};
+use criterion::{criterion_group, criterion_main, Criterion};
 
-use oramfs::{BaseORAM, get_io, ORAMConfig, ORAMFS, PathORAM};
+use oramfs::{get_io, BaseORAM, ORAMConfig, PathORAM, ORAMFS};
 
 pub fn cli_for_oram(oram: String, disable_encryption: bool) -> ORAMConfig {
     let mut args = ORAMConfig {

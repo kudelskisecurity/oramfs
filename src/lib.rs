@@ -7,10 +7,10 @@ pub use manage::ORAMConfig;
 pub use manage::ORAMFSConfig;
 pub use manage::ORAMManager;
 pub use oram::get_oram;
+pub use oram::pathoram::tree::TreeNode;
 pub use oram::pathoram::PathORAM;
 pub use oram::BaseORAM;
 pub use oram::ORAMFS;
-pub use oram::pathoram::tree::TreeNode;
 
 mod cli;
 mod fs;
