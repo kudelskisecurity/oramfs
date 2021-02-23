@@ -169,8 +169,9 @@ Then it can be mounted as usual and its size will be larger than before.
 # How does it work?
 
 Instead of implementing a full filesystem, `oramfs` only provides a mounted file. Therefore, the user is expected to
-create a filesystem on top of that file using a loop device and the filesystem of their choice. Note that such
-operations usually require root privileges and therefore `oramfs` should be run as root to work properly.
+create a filesystem on top of that file using a loop device, the filesystem of their choice and finally mounting that
+filesystem. Note that such operations usually require root privileges and therefore `oramfs` should be run as root to
+work properly.
 
 `oramfs` takes a public directory as input and exposes a single private file, which is a proxy for read and write
 operations so that they are privacy-preserving thanks to an ORAM scheme.
