@@ -31,6 +31,60 @@ private directory has an impact on the public directory. And if that public dire
 it is safely and transparently synchronized to the remote server whenever an operation is performed on the private
 directory.
 
+# Example
+
+In this example, we go through the setup of an ORAM that transparently synchronizes data to a remote FTP server.
+
+We assume that an `rclone` remote has already been configured for an FTP server you have access to,
+using `rclone config`. The `rclone` config file should have an entry for that remote, similar to:
+
+```
+[myftp]
+type = ftp
+host = 1.2.3.4
+user = myusername
+pass = mypassword
+```
+
+Let's mount the remote FTP server directory as local directory. We will use this directory as public directory of our
+ORAM:
+
+```
+rclone mount --daemon --allow-other --dir-cache-time 1s --poll-interval 1s --vfs-cache-mode writes --vfs-write-back 200ms myftp:somedirectory/ public
+```
+
+Create an ORAM called `myoram`:
+
+```
+# oramfs add myoram public/ private/
+Please enter desired ORAM total size in bytes,
+or press enter to use default [default: 16000000 (16 MB)]:
+
+Adjusting ORAM size to closest valid value: 16711680 bytes
+Please enter encryption passphrase:
+Please enter path to client data directory to use, or press enter to use default [default: /etc/oramfs/myoram]:
+
+Please enter path to mointpoint directory to use, or press enter to use default [default: /tmp/oramfs_myoram]:
+
+Successfully added ORAM myoram.
+```
+
+Mount the ORAM, write a file to it:
+
+```
+# oramfs mount myoram
+# echo hello world > private/somefile
+```
+
+When finished, unmount it:
+
+```
+# oramfs unmount myoram
+```
+
+That's it! Files written/read to/from the private directory are encrypted and access patterns are hidden to the FTP
+server. For more details, make sure to read the Privacy section below.
+
 # Getting started
 
 Install Rust using [rustup](https://rustup.rs/) if it is not installed yet.
@@ -257,9 +311,13 @@ The `public` directory can be safely mirrored to the cloud, without the cloud pr
 accessed and whether read or write operations were performed. One scenario would be to mount a remote Google Drive
 directory as the `public` directory, and use that `public` directory as the public directory for the ORAMFS.
 
-# Read caching
+## Read caching
 
-To avoid read caching, on Linux, clear the kernel cache before reading a file from the ORAM:
+If reads are cached, then the ORAM won't perform any work on cached reads. This is a privacy issue because it would mean
+that if all reads are cached, then we can be sure that any modification to the public directory must be a write
+operation.
+
+To avoid read caching, on Linux, always clear the kernel cache before reading a file from the ORAM:
 
 ```
 sync; echo 1 > /proc/sys/vm/drop_caches
@@ -277,7 +335,6 @@ the `RUSTFLAGS="-Ctarget-cpu=native"` environment variable.
 
 Run tests with `cargo test --release`
 
-
 # Contributing
 
 Feel free to open an issue or pull request.
@@ -288,9 +345,12 @@ Code should be formatted with rustfmt
 
 Copyright(c) 2021 Nagravision SA.
 
-This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License version 3 as published by the Free Software Foundation.
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public
+License version 3 as published by the Free Software Foundation.
 
-This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License along with this program. If not, see http://www.gnu.org/licenses/.
+You should have received a copy of the GNU General Public License along with this program. If not,
+see http://www.gnu.org/licenses/.
 
