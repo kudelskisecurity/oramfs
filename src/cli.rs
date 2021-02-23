@@ -15,7 +15,7 @@ pub enum CLISubCommand {
         #[structopt(long = "oneline", help = "Output only one line per ORAM configuration")]
         oneline: bool,
     },
-    #[structopt(about = "Add an ORAM")]
+    #[structopt(about = "Add an ORAM", visible_alias = "create")]
     Add {
         #[structopt(name = "oram_name", help = "Name of the ORAM to add")]
         oram_name: String,
@@ -124,7 +124,7 @@ pub enum CLISubCommand {
         #[structopt(name = "oram_name", help = "Name of the ORAM to remove.")]
         oram_name: String,
     },
-    #[structopt(about = "Mount an ORAM")]
+    #[structopt(about = "Mount an ORAM", visible_alias = "open")]
     Mount {
         #[structopt(name = "oram_name", help = "Name of the ORAM to mount.")]
         oram_name: String,
@@ -151,7 +151,7 @@ pub enum CLISubCommand {
         )]
         manual: bool,
     },
-    #[structopt(about = "Unmount an ORAM")]
+    #[structopt(about = "Unmount an ORAM", visible_alias = "close")]
     Umount {
         #[structopt(name = "oram_name", help = "Name of the ORAM to unmount.")]
         oram_name: String,
