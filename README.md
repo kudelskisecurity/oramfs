@@ -257,7 +257,8 @@ and therefore, it's not possible to change those options without losing the data
 # Advanced Usage
 
 Note that `oramfs` requires to be run as root. The reason for this is that this software relies on an external
-additional layer, to obtain a working filesystem, such as setting up a loop device and formatting it as ext4.
+additional layer, to obtain a working filesystem, such as setting up a loop device, formatting it as ext4, and more
+importantly, mounting it.
 
 Run the produced executable directly or run it via cargo with `cargo run --release`.
 
