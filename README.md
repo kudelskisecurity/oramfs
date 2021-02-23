@@ -10,6 +10,29 @@
 * Supports **multiple ORAM schemes** - PathORAM, etc.
 * Written in **Rust** - Avoids memory safety issues, great performance
 
+```
+# oramfs --help
+oramfs 0.2.0
+ORAM filesystem written in Rust
+
+USAGE:
+    oramfs <SUBCOMMAND>
+
+FLAGS:
+    -h, --help       Prints help information
+    -V, --version    Prints version information
+
+SUBCOMMANDS:
+    add        Add an ORAM [aliases: create, create]
+    enlarge    Enlarge an ORAM. This effectively doubles its size. Note that the ORAM must be unmounted first.
+    help       Prints this message or the help of the given subcommand(s)
+    ls         List existing ORAMs
+    mount      Mount an ORAM [aliases: open, open]
+    rm         Remove an existing ORAM
+    umount     Unmount an ORAM [aliases: close, close]
+
+```
+
 **DISCLAIMER** `oramfs` is a prototype and may not be ready for production. It may erase some of your data. Make sure to
 backup important data before using this software.
 
