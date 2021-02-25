@@ -1,6 +1,6 @@
 [package]
 name = "oramfs"
-version = "0.2.0"
+version = "1.0.0"
 authors = ["Nils Amiet <nils.amiet@kudelskisecurity.com>"]
 edition = "2018"
 
