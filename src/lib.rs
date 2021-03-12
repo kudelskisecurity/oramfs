@@ -11,6 +11,7 @@ pub use oram::pathoram::tree::TreeNode;
 pub use oram::pathoram::PathORAM;
 pub use oram::BaseORAM;
 pub use oram::ORAMFS;
+pub use manage::PASSPHRASE_ENV_VAR_KEY;
 
 mod cli;
 mod fs;

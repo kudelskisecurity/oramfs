@@ -1,3 +1,4 @@
+use std::{fs, io};
 use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::io::Write;
@@ -5,14 +6,14 @@ use std::path::Path;
 use std::process::Command;
 use std::thread::sleep;
 use std::time::Duration;
-use std::{fs, io};
 
 use daemonize::Daemonize;
 use serde::{Deserialize, Serialize};
 
-use crate::{get_io, BaseORAM, CLISubCommand, PathORAM, BIG_FILE_NAME, ORAMFS};
+use crate::{BaseORAM, BIG_FILE_NAME, CLISubCommand, get_io, ORAMFS, PathORAM};
 
 const ORAMFS_CONFIG_FILE_PATH: &str = "~/.config/oramfs/oramfs.yml";
+pub const PASSPHRASE_ENV_VAR_KEY: &str = "ORAMFS_PASSPHRASE";
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct ORAMFSConfig {
@@ -379,6 +380,23 @@ impl ORAMManager {
         }
 
         Self::save_config(&config);
+
+        // ask for passphrase
+        match std::env::var_os(PASSPHRASE_ENV_VAR_KEY) {
+            Some(value) => {
+                args.encryption_passphrase = value
+                    .to_str()
+                    .expect("Failed to read passphrase from environment variable")
+                    .to_string();
+            }
+            None => {
+                let prompt = "Please enter your passphrase to unlock the ORAM:";
+                let passphrase =
+                    rpassword::prompt_password_stdout(prompt).expect("Failed to read passphrase");
+
+                args.encryption_passphrase = String::from(passphrase.trim());
+            }
+        };
 
         // update position map
         let io = get_io(&args);

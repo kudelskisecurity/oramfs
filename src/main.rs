@@ -10,7 +10,7 @@ use structopt::StructOpt;
 use oramfs::ORAMConfig;
 use oramfs::ORAMManager;
 use oramfs::ORAMFS;
-use oramfs::{start, CLISubCommand};
+use oramfs::{start, CLISubCommand, PASSPHRASE_ENV_VAR_KEY};
 use oramfs::{CLIArgs, BIG_FILE_NAME};
 
 /// Start the ORAM in daemon or foreground mode, depending on options passed
@@ -126,7 +126,6 @@ pub fn cleanup(args: ORAMConfig) {
 pub fn oram_mount(oram_name: String, cmd: CLISubCommand) {
     let mut config = ORAMManager::get_config();
     let mut found = false;
-    let env_var_key = "ORAMFS_PASSPHRASE";
     for mut c in config.orams.iter_mut() {
         if c.name == oram_name {
             found = true;
@@ -147,7 +146,7 @@ pub fn oram_mount(oram_name: String, cmd: CLISubCommand) {
                     c.init = true;
 
                     // ask for passphrase first time
-                    match std::env::var_os(env_var_key) {
+                    match std::env::var_os(PASSPHRASE_ENV_VAR_KEY) {
                         Some(val) => {
                             c.encryption_passphrase = val
                                 .to_str()
@@ -181,7 +180,7 @@ pub fn oram_mount(oram_name: String, cmd: CLISubCommand) {
                     c.init = init;
 
                     // ask for passphrase
-                    match std::env::var_os(env_var_key) {
+                    match std::env::var_os(PASSPHRASE_ENV_VAR_KEY) {
                         Some(val) => {
                             c.encryption_passphrase = val
                                 .to_str()
