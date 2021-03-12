@@ -126,6 +126,7 @@ pub fn cleanup(args: ORAMConfig) {
 pub fn oram_mount(oram_name: String, cmd: CLISubCommand) {
     let mut config = ORAMManager::get_config();
     let mut found = false;
+    let env_var_key = "ORAMFS_PASSPHRASE";
     for mut c in config.orams.iter_mut() {
         if c.name == oram_name {
             found = true;
@@ -146,20 +147,31 @@ pub fn oram_mount(oram_name: String, cmd: CLISubCommand) {
                     c.init = true;
 
                     // ask for passphrase first time
-                    let mut passphrase_match = false;
-                    while !passphrase_match {
-                        let prompt = "Please enter an encryption passphrase to secure your ORAM:";
-                        let prompt2 = "Please type it a second time to confirm:";
-                        let passphrase = rpassword::prompt_password_stdout(prompt)
-                            .expect("Failed to read passphrase");
-                        let passphrase2 = rpassword::prompt_password_stdout(prompt2)
-                            .expect("Failed to read passphrase");
+                    match std::env::var_os(env_var_key) {
+                        Some(val) => {
+                            c.encryption_passphrase = val
+                                .to_str()
+                                .expect("Failed to read passphrase from environment variable")
+                                .to_string();
+                        }
+                        None => {
+                            let mut passphrase_match = false;
+                            while !passphrase_match {
+                                let prompt =
+                                    "Please enter an encryption passphrase to secure your ORAM:";
+                                let prompt2 = "Please type it a second time to confirm:";
+                                let passphrase = rpassword::prompt_password_stdout(prompt)
+                                    .expect("Failed to read passphrase");
+                                let passphrase2 = rpassword::prompt_password_stdout(prompt2)
+                                    .expect("Failed to read passphrase");
 
-                        if passphrase == passphrase2 {
-                            passphrase_match = true;
-                            c.encryption_passphrase = String::from(passphrase.trim());
-                        } else {
-                            println!("Passphrases did not match.");
+                                if passphrase == passphrase2 {
+                                    passphrase_match = true;
+                                    c.encryption_passphrase = String::from(passphrase.trim());
+                                } else {
+                                    println!("Passphrases did not match.");
+                                }
+                            }
                         }
                     }
 
@@ -169,11 +181,21 @@ pub fn oram_mount(oram_name: String, cmd: CLISubCommand) {
                     c.init = init;
 
                     // ask for passphrase
-                    let prompt = "Please enter your passphrase to unlock the ORAM:";
-                    let passphrase = rpassword::prompt_password_stdout(prompt)
-                        .expect("Failed to read passphrase");
+                    match std::env::var_os(env_var_key) {
+                        Some(val) => {
+                            c.encryption_passphrase = val
+                                .to_str()
+                                .expect("Failed to read passphrase from environment variable")
+                                .to_string();
+                        }
+                        None => {
+                            let prompt = "Please enter your passphrase to unlock the ORAM:";
+                            let passphrase = rpassword::prompt_password_stdout(prompt)
+                                .expect("Failed to read passphrase");
 
-                    c.encryption_passphrase = String::from(passphrase.trim());
+                            c.encryption_passphrase = String::from(passphrase.trim());
+                        }
+                    };
                 }
 
                 break;

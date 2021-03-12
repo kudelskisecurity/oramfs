@@ -61,7 +61,6 @@ Please enter desired ORAM total size in bytes,
 or press enter to use default [default: 16000000 (16 MB)]:
 
 Adjusting ORAM size to closest valid value: 16711680 bytes
-Please enter encryption passphrase:
 Please enter path to client data directory to use, or press enter to use default [default: /etc/oramfs/myoram]:
 
 Please enter path to mointpoint directory to use, or press enter to use default [default: /tmp/oramfs_myoram]:
@@ -241,6 +240,15 @@ importantly, mounting it.
 Run the produced executable directly or run it via cargo with `cargo run --release`.
 
 Show help with `cargo run -- -h`
+
+## Non-interactive passphrase usage
+
+The passphrase can be passed via the `ORAMFS_PASSPHRASE` environment variable. This works both for mounting the first
+time (initialization) and future mounts.
+
+```
+ORAMFS_PASSPHRASE=mysupersecretpassphrase oramfs mount myoram
+```
 
 ## Foreground mode
 
