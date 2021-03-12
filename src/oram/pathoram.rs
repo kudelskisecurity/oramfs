@@ -3,20 +3,21 @@ use std::collections::{HashMap, HashSet};
 use std::hash::BuildHasherDefault;
 use std::path::Path;
 
-use aes_ctr::Aes128Ctr;
 use aes_ctr::cipher::stream::generic_array::GenericArray;
+use aes_ctr::Aes128Ctr;
+use argon2::PasswordHasher;
 use bytes::{Buf, Bytes, BytesMut};
-use chacha20::{ChaCha8, Key, Nonce};
 use chacha20::cipher::{NewStreamCipher, SyncStreamCipher};
+use chacha20::{ChaCha8, Key, Nonce};
 use log::{debug, info};
 use nohash_hasher::NoHashHasher;
-use rand::{AsByteSliceMut, Rng, thread_rng};
 use rand::seq::SliceRandom;
+use rand::{thread_rng, AsByteSliceMut, Rng};
 use serde::{Deserialize, Serialize};
 
 use crate::io::BaseIOService;
-use crate::oram::BaseORAM;
 use crate::oram::pathoram::tree::TreeNode;
+use crate::oram::BaseORAM;
 use crate::ORAMConfig;
 
 pub mod tree;
@@ -263,17 +264,29 @@ impl<'a> PathORAM<'a> {
                 self.encryption_key = self.io.read_file(self.args.encryption_key_file.clone());
             } else {
                 debug!("Deriving encryption key from supplied passphrase...");
-                let context = "PATHORAM encryption key";
                 let key_size = match &self.args.cipher[..] {
                     "aes-ctr" => 16,
                     _ => 32, // ChaCha8
                 };
-                let mut derived_key = vec![0; key_size];
-                blake3::derive_key(
-                    context,
-                    self.args.encryption_passphrase.as_bytes(),
-                    &mut derived_key,
-                );
+
+                let salt = argon2::password_hash::SaltString::new(&self.args.salt)
+                    .expect("Failed to parse salt");
+                let password = self.args.encryption_passphrase.as_bytes();
+                let argon2 = argon2::Argon2::default();
+
+                let params = argon2::Params {
+                    output_length: key_size,
+                    t_cost: 100,          // iterations
+                    ..Default::default()  // remaining params are default
+                };
+
+                let output = argon2
+                    .hash_password(password, None, None, params, salt.as_salt())
+                    .unwrap()
+                    .hash
+                    .unwrap();
+                let derived_key = Vec::from(output.as_bytes());
+
                 self.encryption_key = derived_key;
             }
         }
@@ -559,8 +572,8 @@ impl<'a> PathORAM<'a> {
 mod tests {
     use bytes::Bytes;
 
-    use crate::{ORAMConfig, PathORAM};
     use crate::io::MemoryIOService;
+    use crate::{ORAMConfig, PathORAM};
 
     fn cli_for_oram(disable_encryption: bool) -> ORAMConfig {
         let mut args = ORAMConfig {

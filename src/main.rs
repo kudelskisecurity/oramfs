@@ -125,7 +125,6 @@ pub fn cleanup(args: ORAMConfig) {
 /// Mount the ORAM corresponding to the config with name `oram_name`
 pub fn oram_mount(oram_name: String, cmd: CLISubCommand) {
     let mut config = ORAMManager::get_config();
-    let mut must_save = false;
     let mut found = false;
     for mut c in config.orams.iter_mut() {
         if c.name == oram_name {
@@ -145,18 +144,41 @@ pub fn oram_mount(oram_name: String, cmd: CLISubCommand) {
                 if !manual && !c.init {
                     println!("It looks like this ORAM is mounting for the first time. Initializing it first...");
                     c.init = true;
-                    must_save = true;
+
+                    // ask for passphrase first time
+                    let mut passphrase_match = false;
+                    while !passphrase_match {
+                        let prompt = "Please enter an encryption passphrase to secure your ORAM:";
+                        let prompt2 = "Please type it a second time to confirm:";
+                        let passphrase = rpassword::prompt_password_stdout(prompt)
+                            .expect("Failed to read passphrase");
+                        let passphrase2 = rpassword::prompt_password_stdout(prompt2)
+                            .expect("Failed to read passphrase");
+
+                        if passphrase == passphrase2 {
+                            passphrase_match = true;
+                            c.encryption_passphrase = String::from(passphrase.trim());
+                        } else {
+                            println!("Passphrases did not match.");
+                        }
+                    }
+
+                    // update init status in config file
+                    ORAMManager::mark_init(c.name.clone());
                 } else {
                     c.init = init;
+
+                    // ask for passphrase
+                    let prompt = "Please enter your passphrase to unlock the ORAM:";
+                    let passphrase = rpassword::prompt_password_stdout(prompt)
+                        .expect("Failed to read passphrase");
+
+                    c.encryption_passphrase = String::from(passphrase.trim());
                 }
 
                 break;
             }
         }
-    }
-
-    if must_save {
-        ORAMManager::save_config(&config);
     }
 
     if !found {

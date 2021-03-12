@@ -30,6 +30,7 @@ pub struct ORAMConfig {
     pub client_data_dir: String,
     pub encryption_key_file: String,
     pub encryption_passphrase: String,
+    pub salt: String,
     pub io: String,
     pub n: i64,
     pub z: i64,
@@ -89,7 +90,7 @@ impl ORAMManager {
             client_data_dir,
             cipher,
             non_interactive,
-            encryption_passphrase,
+            encryption_passphrase: _,
             mountpoint,
             n,
             z,
@@ -127,7 +128,8 @@ impl ORAMManager {
                 client_data_dir,
                 encryption_key_file,
                 mountpoint: mountpoint.clone(),
-                encryption_passphrase,
+                encryption_passphrase: "".to_string(),
+                salt: String::new(),
                 interactive: false,
                 init: false,
                 foreground: false,
@@ -137,6 +139,10 @@ impl ORAMManager {
             if !non_interactive {
                 Self::interactive_config(&mut oram);
             }
+
+            // generate random salt
+            let salt = argon2::password_hash::SaltString::generate(&mut rand_core::OsRng);
+            oram.salt = salt.as_str().to_string();
 
             // handle mountpoint directory
             std::fs::create_dir_all(oram.mountpoint.clone()).unwrap_or_else(|_| {
@@ -226,10 +232,20 @@ impl ORAMManager {
         serde_yaml::to_writer(file, config).expect("Failed to write file");
     }
 
+    pub fn mark_init(name: String) {
+        let mut config = Self::get_config();
+
+        for mut oram_config in config.orams.iter_mut() {
+            if oram_config.name == name {
+                oram_config.init = true;
+            }
+        }
+        Self::save_config(&config);
+    }
+
     /// Interactively ask ORAM parameters from the user
     pub fn interactive_config(args: &mut ORAMConfig) {
         Self::ask_oram_size(args);
-        Self::ask_passphrase(args);
         Self::ask_client_data_dir(args);
         Self::ask_mountpoint(args);
     }
@@ -265,19 +281,6 @@ impl ORAMManager {
                     println!("Not a valid number. Please input a valid number for the ORAM size.")
                 }
             };
-        }
-    }
-
-    /// Ask the user to input their passphrase
-    ///
-    /// The passphrase is directly set on the ORAMConfig instance
-    pub fn ask_passphrase(args: &mut ORAMConfig) {
-        // get encryption passphrase
-        if !args.disable_encryption {
-            let passphrase =
-                rpassword::prompt_password_stdout("Please enter encryption passphrase: ")
-                    .expect("Failed to read passphrase");
-            args.encryption_passphrase = String::from(passphrase.trim());
         }
     }
 

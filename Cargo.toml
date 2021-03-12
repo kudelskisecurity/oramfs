@@ -23,7 +23,8 @@ chacha20 = "0.6.0"
 bytes = { version = "0.6.0", features = ["serde"] }
 daemonize = "0.4.1"
 rpassword = "5.0.0"
-blake3 = "0.3.7"
+argon2 = "0.1"
+rand_core = { version = "0.6", features = ["std"] }
 vec_map = "0.8.2"
 nohash-hasher = "0.2.0"
 shellexpand = "2.1.0"
