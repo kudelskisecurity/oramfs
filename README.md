@@ -340,6 +340,11 @@ passing `--cipher aes-ctr`.
 To achieve the best performance, make sure to build or run using `cargo`'s `--release` flag and to pass
 the `RUSTFLAGS="-Ctarget-cpu=native"` environment variable.
 
+## Usage on SSD or flash storage
+
+For each read or write operation, the ORAM scheme actually performs multiple operations under the scenes. Even for read
+operations, underlying write operations are performed. This can significantly reduce the lifespan of SSDs.
+
 # Testing
 
 Run tests with `cargo test --release`
