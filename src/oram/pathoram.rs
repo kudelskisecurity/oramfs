@@ -351,7 +351,6 @@ impl<'a> PathORAM<'a> {
                 }
                 let p = self.tree.path(*x);
                 if p.contains(bucket_id) {
-                    // TODO contains is slow
                     found_leaf = Some(*x);
                 }
             }

@@ -180,7 +180,7 @@ impl<'a> ORAMFS<'a> {
                 // block_bytes[offset_copy..end] = data[0..length_to_write]
                 oram_bytes.splice(
                     (offset_copy as usize)..(end as usize),
-                    data[0..(length_to_write as usize)].iter().cloned(), // TODO clone()
+                    data[0..(length_to_write as usize)].iter().cloned(),
                 );
                 block_bytes = &oram_bytes[..];
             } else {
@@ -189,7 +189,6 @@ impl<'a> ORAMFS<'a> {
 
             data = &data[(length_to_write as usize)..];
 
-            // TODO can we avoid copying bytes around?
             let _ = self.oram.write(block_id, Bytes::from(block_bytes.to_vec()));
 
             total_bytes_written += length_to_write;
