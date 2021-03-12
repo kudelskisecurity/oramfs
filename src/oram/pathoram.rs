@@ -266,7 +266,6 @@ impl<'a> PathORAM<'a> {
                 let context = "PATHORAM encryption key";
                 let key_size = match &self.args.cipher[..] {
                     "aes-ctr" => 16,
-                    "aes-ctr-openssl" => 16,
                     _ => 32, // ChaCha8
                 };
                 let mut derived_key = vec![0; key_size];
