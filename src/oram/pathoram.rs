@@ -3,20 +3,20 @@ use std::collections::{HashMap, HashSet};
 use std::hash::BuildHasherDefault;
 use std::path::Path;
 
-use aes_ctr::cipher::stream::generic_array::GenericArray;
 use aes_ctr::Aes128Ctr;
+use aes_ctr::cipher::stream::generic_array::GenericArray;
 use bytes::{Buf, Bytes, BytesMut};
-use chacha20::cipher::{NewStreamCipher, SyncStreamCipher};
 use chacha20::{ChaCha8, Key, Nonce};
+use chacha20::cipher::{NewStreamCipher, SyncStreamCipher};
 use log::{debug, info};
 use nohash_hasher::NoHashHasher;
+use rand::{AsByteSliceMut, Rng, thread_rng};
 use rand::seq::SliceRandom;
-use rand::{thread_rng, AsByteSliceMut, Rng};
 use serde::{Deserialize, Serialize};
 
 use crate::io::BaseIOService;
-use crate::oram::pathoram::tree::TreeNode;
 use crate::oram::BaseORAM;
+use crate::oram::pathoram::tree::TreeNode;
 use crate::ORAMConfig;
 
 pub mod tree;
@@ -92,6 +92,12 @@ impl BaseORAM for PathORAM<'_> {
 
     fn args(&self) -> &ORAMConfig {
         self.args
+    }
+
+    /// Save the stash and position map after each operation.
+    /// This should prevent data loss in case the process is killed before unmounting.
+    fn post_op(&mut self) {
+        self.save();
     }
 }
 
@@ -555,8 +561,8 @@ impl<'a> PathORAM<'a> {
 mod tests {
     use bytes::Bytes;
 
-    use crate::io::MemoryIOService;
     use crate::{ORAMConfig, PathORAM};
+    use crate::io::MemoryIOService;
 
     fn cli_for_oram(disable_encryption: bool) -> ORAMConfig {
         let mut args = ORAMConfig {

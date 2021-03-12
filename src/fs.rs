@@ -127,6 +127,7 @@ impl Filesystem for ORAMFS<'_> {
         match ino {
             BIG_FILE_INO => {
                 let bytes_read = self.split_read(size, offset);
+                self.oram.post_op();
                 reply.data(bytes_read.as_slice());
             }
             _ => reply.error(ENOENT),
@@ -146,6 +147,7 @@ impl Filesystem for ORAMFS<'_> {
         match ino {
             BIG_FILE_INO => {
                 let bytes_written = self.split_write(offset, data);
+                self.oram.post_op();
                 reply.written(bytes_written);
             }
             _ => reply.error(ENOENT),

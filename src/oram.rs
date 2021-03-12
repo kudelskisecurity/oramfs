@@ -24,6 +24,9 @@ pub trait BaseORAM: Send {
     /// Cleanup the ORAM
     fn cleanup(&mut self) {}
 
+    /// Called after each read or write operation
+    fn post_op(&mut self) {}
+
     /// Read block with id `block_id` and return the bytes read
     fn read(&mut self, block_id: i64) -> Vec<u8>;
 
