@@ -10,7 +10,7 @@ use structopt::StructOpt;
 use oramfs::ORAMConfig;
 use oramfs::ORAMManager;
 use oramfs::ORAMFS;
-use oramfs::{start, CLISubCommand, PASSPHRASE_ENV_VAR_KEY};
+use oramfs::{start, CLISubCommand};
 use oramfs::{CLIArgs, BIG_FILE_NAME};
 
 /// Start the ORAM in daemon or foreground mode, depending on options passed
@@ -146,33 +146,8 @@ pub fn oram_mount(oram_name: String, cmd: CLISubCommand) {
                     c.init = true;
 
                     // ask for passphrase first time
-                    match std::env::var_os(PASSPHRASE_ENV_VAR_KEY) {
-                        Some(val) => {
-                            c.encryption_passphrase = val
-                                .to_str()
-                                .expect("Failed to read passphrase from environment variable")
-                                .to_string();
-                        }
-                        None => {
-                            let mut passphrase_match = false;
-                            while !passphrase_match {
-                                let prompt =
-                                    "Please enter an encryption passphrase to secure your ORAM:";
-                                let prompt2 = "Please type it a second time to confirm:";
-                                let passphrase = rpassword::prompt_password_stdout(prompt)
-                                    .expect("Failed to read passphrase");
-                                let passphrase2 = rpassword::prompt_password_stdout(prompt2)
-                                    .expect("Failed to read passphrase");
-
-                                if passphrase == passphrase2 {
-                                    passphrase_match = true;
-                                    c.encryption_passphrase = String::from(passphrase.trim());
-                                } else {
-                                    println!("Passphrases did not match.");
-                                }
-                            }
-                        }
-                    }
+                    let passphrase = ORAMManager::get_passphrase_first_time();
+                    c.encryption_passphrase = passphrase;
 
                     // update init status in config file
                     ORAMManager::mark_init(c.name.clone());
@@ -180,21 +155,8 @@ pub fn oram_mount(oram_name: String, cmd: CLISubCommand) {
                     c.init = init;
 
                     // ask for passphrase
-                    match std::env::var_os(PASSPHRASE_ENV_VAR_KEY) {
-                        Some(val) => {
-                            c.encryption_passphrase = val
-                                .to_str()
-                                .expect("Failed to read passphrase from environment variable")
-                                .to_string();
-                        }
-                        None => {
-                            let prompt = "Please enter your passphrase to unlock the ORAM:";
-                            let passphrase = rpassword::prompt_password_stdout(prompt)
-                                .expect("Failed to read passphrase");
-
-                            c.encryption_passphrase = String::from(passphrase.trim());
-                        }
-                    };
+                    let passphrase = ORAMManager::get_passphrase();
+                    c.encryption_passphrase = passphrase;
                 }
 
                 break;

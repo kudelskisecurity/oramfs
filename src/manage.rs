@@ -1,4 +1,3 @@
-use std::{fs, io};
 use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::io::Write;
@@ -6,11 +5,12 @@ use std::path::Path;
 use std::process::Command;
 use std::thread::sleep;
 use std::time::Duration;
+use std::{fs, io};
 
 use daemonize::Daemonize;
 use serde::{Deserialize, Serialize};
 
-use crate::{BaseORAM, BIG_FILE_NAME, CLISubCommand, get_io, ORAMFS, PathORAM};
+use crate::{get_io, BaseORAM, CLISubCommand, PathORAM, BIG_FILE_NAME, ORAMFS};
 
 const ORAMFS_CONFIG_FILE_PATH: &str = "~/.config/oramfs/oramfs.yml";
 pub const PASSPHRASE_ENV_VAR_KEY: &str = "ORAMFS_PASSPHRASE";
@@ -382,21 +382,8 @@ impl ORAMManager {
         Self::save_config(&config);
 
         // ask for passphrase
-        match std::env::var_os(PASSPHRASE_ENV_VAR_KEY) {
-            Some(value) => {
-                args.encryption_passphrase = value
-                    .to_str()
-                    .expect("Failed to read passphrase from environment variable")
-                    .to_string();
-            }
-            None => {
-                let prompt = "Please enter your passphrase to unlock the ORAM:";
-                let passphrase =
-                    rpassword::prompt_password_stdout(prompt).expect("Failed to read passphrase");
-
-                args.encryption_passphrase = String::from(passphrase.trim());
-            }
-        };
+        let passphrase = Self::get_passphrase();
+        args.encryption_passphrase = passphrase;
 
         // update position map
         let io = get_io(&args);
@@ -501,6 +488,52 @@ impl ORAMManager {
             .arg(args.mountpoint)
             .output()
             .expect("Failed to unmount ORAM.");
+    }
+
+    pub fn get_passphrase() -> String {
+        match std::env::var_os(PASSPHRASE_ENV_VAR_KEY) {
+            Some(value) => value
+                .to_str()
+                .expect("Failed to read passphrase from environment variable")
+                .to_string(),
+            None => {
+                let prompt = "Please enter your passphrase to unlock the ORAM:";
+                let passphrase =
+                    rpassword::prompt_password_stdout(prompt).expect("Failed to read passphrase");
+
+                String::from(passphrase.trim())
+            }
+        }
+    }
+
+    pub fn get_passphrase_first_time() -> String {
+        match std::env::var_os(PASSPHRASE_ENV_VAR_KEY) {
+            Some(val) => val
+                .to_str()
+                .expect("Failed to read passphrase from environment variable")
+                .to_string(),
+            None => {
+                let mut passphrase_match = false;
+                let mut final_passphrase = String::new();
+                while !passphrase_match {
+                    let prompt = "Please enter an encryption passphrase to secure your ORAM:";
+                    let prompt2 = "Please type it a second time to confirm:";
+                    let passphrase = rpassword::prompt_password_stdout(prompt)
+                        .expect("Failed to read passphrase");
+                    let passphrase2 = rpassword::prompt_password_stdout(prompt2)
+                        .expect("Failed to read passphrase");
+
+                    if passphrase == passphrase2 {
+                        passphrase_match = true;
+                        final_passphrase = String::from(passphrase.trim());
+                    } else {
+                        println!("Passphrases did not match.");
+                    }
+                }
+
+                final_passphrase
+            }
+        }
     }
 }
 
