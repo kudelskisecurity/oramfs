@@ -7,7 +7,7 @@
 * **Cloud storage agnostic** - synchronize your files to any remote server that can be mounted as a local directory
 * **Filesystem agnostic** - ext4 is used by default. Manual mode let you use the filesystem you like.
 * Supports **multiple encryption ciphers** - ChaCha8, AES-CTR
-* Supports **multiple ORAM schemes** - PathORAM, etc.
+* Supports **multiple ORAM schemes** - Path ORAM, etc.
 * Written in **Rust** - Avoids memory safety issues, great performance
 
 **DISCLAIMER** `oramfs` is a prototype and may not be ready for production. It may erase some of your data. Make sure to
@@ -333,12 +333,15 @@ should be little need to manually pass `--init`.
 `oramfs` looks at the `init` property in the global oramfs config file to determine whether the ORAM was already
 initialized.
 
-## ORAM schemes
+## Using other ORAM schemes than Path ORAM
 
-This prototype currently only supports PathORAM, but it is built so that more schemes can be added in the future. To
+This prototype currently only implements Path ORAM, but it is built so that more schemes can be added in the future. To
 prove this, there is a second scheme named `fakeoram` built-in, but it should not be used in production because it is
 not a true ORAM. FakeORAM is a "Hello World" example ORAM scheme that could be useful for developers who want to add new
 ORAM schemes to `oramfs`.
+
+To use another scheme, such as `fakeoram`, update the configuration file and change the `algorithm` entry to `fakeoram`.
+Then simply mount and initialize the oram.
 
 # Privacy
 
