@@ -304,6 +304,21 @@ dd if=/dev/urandom of=/path/to/client-data/encryption_key_16 bs=16 count=1
 Note that the bytes in encryption key files are directly used and therefore it is the user's responsibility to securely
 store them, for exampled on an encrypted detachable storage (e.g. USB thumb drive).
 
+## Using another filesystem than ext4
+
+`oramfs` supports any filesystem. To use something different than the default ext4, do the following.
+
+During initialization, pass the `--manual` flag, then manually create the filesystem of your choice on the `oram` file
+in the mountpoint directory. Here is an example with ext3:
+
+```
+oramfs add myoram public/ private/
+oramfs mount myoram --manual
+mkfs.ext3 /tmp/oramfs_myoram/oram
+oramfs umount myoram
+oramfs mount myoram
+```
+
 ## Mounting multiple ORAMs at the same time
 
 When mounting multiple ORAMs at the same time, make sure that the ORAMs use different, public directories, private
