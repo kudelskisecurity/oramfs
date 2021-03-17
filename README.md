@@ -301,6 +301,9 @@ For `aes-ctr`, use a 16 bytes (128 bits) key:
 dd if=/dev/urandom of=/path/to/client-data/encryption_key_16 bs=16 count=1
 ```
 
+Note that the bytes in encryption key files are directly used and therefore it is the user's responsibility to securely
+store them, for exampled on an encrypted detachable storage (e.g. USB thumb drive).
+
 ## Mounting multiple ORAMs at the same time
 
 When mounting multiple ORAMs at the same time, make sure that the ORAMs use different, public directories, private
