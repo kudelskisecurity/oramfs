@@ -33,7 +33,7 @@ pub enum CLISubCommand {
 
         #[structopt(
             long = "encryption-key-file",
-            default_value = "/etc/oramfs/pathoram/encryption_key",
+            default_value = "",
             help = "Path to the file containing the encryption key bytes"
         )]
         encryption_key_file: String,

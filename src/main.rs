@@ -146,8 +146,10 @@ pub fn oram_mount(oram_name: String, cmd: CLISubCommand) {
                     c.init = true;
 
                     // ask for passphrase first time
-                    let passphrase = ORAMManager::get_passphrase_first_time();
-                    c.encryption_passphrase = passphrase;
+                    if c.encryption_key_file.is_empty() {
+                        let passphrase = ORAMManager::get_passphrase_first_time();
+                        c.encryption_passphrase = passphrase;
+                    }
 
                     // update init status in config file
                     ORAMManager::mark_init(c.name.clone());
@@ -155,8 +157,10 @@ pub fn oram_mount(oram_name: String, cmd: CLISubCommand) {
                     c.init = init;
 
                     // ask for passphrase
-                    let passphrase = ORAMManager::get_passphrase();
-                    c.encryption_passphrase = passphrase;
+                    if c.encryption_key_file.is_empty() {
+                        let passphrase = ORAMManager::get_passphrase();
+                        c.encryption_passphrase = passphrase;
+                    }
                 }
 
                 break;
