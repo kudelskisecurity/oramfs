@@ -319,6 +319,17 @@ oramfs umount myoram
 oramfs mount myoram
 ```
 
+When enlarging an ORAM using a different filesystem, pass the `--manual` flag. Then, manually resize and unmount
+the `oram` file:
+
+```
+oramfs umount myoram
+oramfs enlarge myoram --manual
+resize2fs -f /tmp/oramfs_myoram/oram  # or equivalent for your filesystem
+oramfs umount myoram
+oramfs mount myoram 
+```
+
 ## Mounting multiple ORAMs at the same time
 
 When mounting multiple ORAMs at the same time, make sure that the ORAMs use different, public directories, private
