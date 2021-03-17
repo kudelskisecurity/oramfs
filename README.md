@@ -382,7 +382,11 @@ Run tests with `cargo test --release`
 
 Feel free to open an issue or pull request.
 
-Code should be formatted with rustfmt
+Code should be formatted with rustfmt. To automatically format the whole project:
+
+```
+cargo fmt
+```
 
 # License and Copyright
 
