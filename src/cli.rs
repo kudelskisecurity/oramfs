@@ -161,5 +161,13 @@ pub enum CLISubCommand {
     Enlarge {
         #[structopt(name = "oram_name", help = "Name of the ORAM to enlarge.")]
         oram_name: String,
+
+        #[structopt(
+        long = "manual",
+        visible_aliases = &["nomount"],
+        help = "Use manual mode. Do not run resize2fs and unmount automatically. \
+        This can be useful for filesystems other than ext4.",
+        )]
+        manual: bool,
     },
 }

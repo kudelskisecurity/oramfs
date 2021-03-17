@@ -200,11 +200,6 @@ fn oram_umount(oram_name: String) {
     );
 }
 
-/// Enlarge the ORAM corresponding to the config with name `oram_name`
-pub fn oram_enlarge(oram_name: String) {
-    ORAMManager::double(oram_name);
-}
-
 /// Main entry point
 pub fn main() {
     env_logger::init();
@@ -216,6 +211,6 @@ pub fn main() {
         CLISubCommand::Remove { oram_name } => ORAMManager::remove_oram(oram_name),
         CLISubCommand::Mount { oram_name, .. } => oram_mount(oram_name, args.cmd),
         CLISubCommand::Umount { oram_name } => oram_umount(oram_name),
-        CLISubCommand::Enlarge { oram_name } => oram_enlarge(oram_name),
+        CLISubCommand::Enlarge { oram_name: _, .. } => ORAMManager::double(args.cmd),
     }
 }

@@ -338,32 +338,34 @@ impl ORAMManager {
 
     /// Enlarges an existing oram by doubling its number of nodes.
     /// This should be called when the oram is unmounted.
-    pub fn double(oram_name: String) {
-        let mut config = Self::get_config();
-        let mut args: ORAMConfig;
-        let mut found = false;
-        for mut o in config.orams.iter_mut() {
-            if o.name == oram_name {
-                args = o.clone();
-                found = true;
+    pub fn double(cmd: CLISubCommand) {
+        if let CLISubCommand::Enlarge { oram_name, manual } = cmd {
+            let mut config = Self::get_config();
+            let mut args: ORAMConfig;
+            let mut found = false;
+            for mut o in config.orams.iter_mut() {
+                if o.name == oram_name {
+                    args = o.clone();
+                    found = true;
 
-                if args.algorithm != "pathoram" {
-                    panic!("Unsupported ORAM scheme.");
+                    if args.algorithm != "pathoram" {
+                        panic!("Unsupported ORAM scheme.");
+                    }
+
+                    Self::do_double(&mut o, manual);
                 }
-
-                Self::do_double(&mut o);
             }
-        }
 
-        if !found {
-            panic!(
-                "No such ORAM: {}. \nDid you want to add an ORAM first?",
-                oram_name
-            );
-        }
+            if !found {
+                panic!(
+                    "No such ORAM: {}. \nDid you want to add an ORAM first?",
+                    oram_name
+                );
+            }
+        };
     }
 
-    pub fn do_double(args: &mut ORAMConfig) {
+    pub fn do_double(args: &mut ORAMConfig, manual: bool) {
         let mut config = Self::get_config();
 
         // update ORAM.n
@@ -454,11 +456,19 @@ impl ORAMManager {
         let args_clone = args.clone();
         let args_clone2 = args.clone();
         let args_clone3 = args.clone();
-        let daemonize = Daemonize::new()
-            .working_directory(".")
-            .exit_action(move || Self::resize2fs_enlarge(args_clone3));
-
+        let mut daemonize = Daemonize::new().working_directory(".");
         println!("Running as a deamon...");
+        if !manual {
+            daemonize = daemonize.exit_action(move || Self::resize2fs_enlarge(args_clone3));
+        } else {
+            let big_file_path = Path::new(&args.mountpoint).join(BIG_FILE_NAME);
+            println!(
+                "Using manual mode. Please manually resize {:?}. For ext4 this is achieved with \
+            resize2fs -f <FILE>. When done, please also unmount the oram.",
+                big_file_path
+            )
+        }
+
         if daemonize.start().is_ok() {
             let oramfs = ORAMFS {
                 args: &args_clone,
