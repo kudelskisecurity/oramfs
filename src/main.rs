@@ -141,7 +141,7 @@ pub fn oram_mount(oram_name: String, cmd: CLISubCommand) {
                 c.manual = manual;
 
                 // autodetect whether init was performed
-                if !manual && !c.init {
+                if !c.init {
                     println!("It looks like this ORAM is mounting for the first time. Initializing it first...");
                     c.init = true;
 
