@@ -178,7 +178,7 @@ impl<'a> PathORAM<'a> {
             }
         }
         if data.is_none() {
-            panic!(format!("Failed to find block {} in stash", { a }));
+            panic!("Failed to find block {} in stash", { a });
         }
 
         // give priority to block a in stash (put it at the front)
