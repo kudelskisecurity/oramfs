@@ -262,6 +262,10 @@ impl<'a> PathORAM<'a> {
             if self.args.encryption_passphrase.is_empty() {
                 debug!("Loading encryption key from file...");
                 self.encryption_key = self.io.read_file(self.args.encryption_key_file.clone());
+                assert!(
+                    !self.encryption_key.is_empty(),
+                    "Encryption key file is empty"
+                );
             } else {
                 debug!("Deriving encryption key from supplied passphrase...");
                 let key_size = match &self.args.cipher[..] {
@@ -462,7 +466,7 @@ impl<'a> PathORAM<'a> {
     fn raw_read_bucket(&self, path: String) -> Vec<Block> {
         let file_contents = self.io.read_file(path);
 
-        let bucket: Bucket = match self.encryption_key.is_empty() {
+        let bucket: Bucket = match self.args.disable_encryption {
             true => bincode::deserialize(file_contents.as_slice()).unwrap(),
             false => {
                 let encrypted_bytes: EncryptedBytes =
