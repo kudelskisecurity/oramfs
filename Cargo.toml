@@ -18,7 +18,8 @@ serde = { version = "1.0.117", features = ["derive"] }
 serde_bytes = "0.11.5"
 serde_yaml = "0.8"
 bincode = "1.3.1"
-aes-ctr = "0.6.0"
+aes = { version = "0.7.4", features = ["ctr"] }
+ctr = "0.7.0"
 chacha20 = "0.6.0"
 bytes = { version = "0.6.0", features = ["serde"] }
 daemonize = "0.4.1"

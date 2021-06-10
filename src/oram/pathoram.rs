@@ -3,12 +3,13 @@ use std::collections::{HashMap, HashSet};
 use std::hash::BuildHasherDefault;
 use std::path::Path;
 
-use aes_ctr::cipher::stream::generic_array::GenericArray;
-use aes_ctr::Aes128Ctr;
+use aes::cipher::generic_array::GenericArray;
+use aes::Aes128Ctr;
 use argon2::PasswordHasher;
 use bytes::{Buf, Bytes, BytesMut};
 use chacha20::cipher::{NewStreamCipher, SyncStreamCipher};
 use chacha20::{ChaCha8, Key, Nonce};
+use ctr::cipher::{NewCipher, StreamCipher};
 use log::{debug, info};
 use nohash_hasher::NoHashHasher;
 use rand::seq::SliceRandom;
