@@ -20,7 +20,6 @@ pub struct TreeNode {
     // caching
     pub height: usize,
     pub leaves_count: i64,
-    cached: bool,
     leaves: Option<Vec<i64>>,
     path: VecMap<Arc<Vec<i64>>>,
 }
@@ -32,7 +31,6 @@ impl TreeNode {
             left: None,
             right: None,
             // caching
-            cached: false,
             leaves: None,
             path: VecMap::new(),
             height: 0,
@@ -52,7 +50,6 @@ impl TreeNode {
         }
 
         let mut tree = TreeNode::create_tree0(n, 0).unwrap();
-        tree.cached = true;
         tree.height = tree.height();
         tree.leaves_count = tree.count_leaves();
         tree
