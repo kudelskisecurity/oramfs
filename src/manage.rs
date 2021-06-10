@@ -289,9 +289,9 @@ impl ORAMManager {
         let mut client_data_dir_input = String::new();
         let default_client_data_dir = format!("/etc/oramfs/{}", args.name);
         println!(
-                "Please enter path to client data directory to use, or press enter to use default [default: {}]:",
-                default_client_data_dir
-            );
+            "Please enter path to client data directory to use, or press enter to use default [default: {}]:",
+            default_client_data_dir
+        );
         io::stdin()
             .read_line(&mut client_data_dir_input)
             .expect("Failed to read client data dir");
@@ -534,8 +534,12 @@ impl ORAMManager {
                         .expect("Failed to read passphrase");
 
                     if passphrase == passphrase2 {
-                        passphrase_match = true;
-                        final_passphrase = String::from(passphrase.trim());
+                        if passphrase.is_empty() {
+                            println!("Passphrase cannot be empty");
+                        } else {
+                            passphrase_match = true;
+                            final_passphrase = String::from(passphrase.trim());
+                        }
                     } else {
                         println!("Passphrases did not match.");
                     }
