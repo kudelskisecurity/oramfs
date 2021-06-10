@@ -85,10 +85,10 @@ impl<'a> ORAMFS<'a> {
 
     /// Compute practical parameters for a given ORAM size
     pub fn params_for_size(oram_size: i64) -> (i64, i64, i64) {
-        let mut n = 255;
-        let mut b = 16384;
-        let mut z = 4;
-        let mut i = 0;
+        let mut n: i64 = 255;
+        let mut b: i64 = 16384;
+        let mut z: i64 = 4;
+        let mut i: i64 = 0;
 
         // allow for ORAMs as small as 1 MB
         if oram_size < 16000000 {
