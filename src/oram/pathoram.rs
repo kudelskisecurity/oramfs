@@ -279,13 +279,12 @@ impl<'a> PathORAM<'a> {
                 let argon2 = argon2::Argon2::default();
 
                 let params = argon2::Params {
-                    output_length: key_size,
-                    t_cost: 100,          // iterations
-                    ..Default::default()  // remaining params are default
+                    output_size: key_size,
+                    ..Default::default() // remaining params are default
                 };
 
                 let output = argon2
-                    .hash_password(password, None, None, params, salt.as_salt())
+                    .hash_password(password, None, params, salt.as_salt())
                     .unwrap()
                     .hash
                     .unwrap();
