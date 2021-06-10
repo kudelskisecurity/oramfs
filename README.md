@@ -84,6 +84,11 @@ When finished, unmount it:
 That's it! Files written/read to/from the private directory are encrypted and access patterns are hidden to the FTP
 server. For more details, make sure to read the Privacy section below.
 
+# Requirements
+
+* Rust
+* `libfuse-dev` package on Debian-based systems
+
 # Getting started
 
 Install Rust using [rustup](https://rustup.rs/) if it is not installed yet.
