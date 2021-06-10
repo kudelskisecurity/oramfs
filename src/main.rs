@@ -17,6 +17,12 @@ use oramfs::{CLIArgs, BIG_FILE_NAME};
 fn start_oram(args: &mut ORAMConfig) {
     let args_clone = args.clone();
 
+    if args.disable_encryption {
+        println!("*****************************************************************************");
+        println!("[WARNING]: Encryption is disabled. This is not secure. You have been warned!");
+        println!("*****************************************************************************");
+    }
+
     println!("Starting ORAM...");
     let oramfs = ORAMFS::new(&args);
 
