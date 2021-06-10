@@ -209,7 +209,7 @@ pub fn get_oram<'a>(
     match &args.algorithm[..] {
         "fakeoram" => Box::new(FakeORAM::new(args, io)) as Box<dyn BaseORAM + 'a>,
         "pathoram" => Box::new(PathORAM::new(args, io)) as Box<dyn BaseORAM + 'a>,
-        _ => Box::new(FakeORAM::new(args, io)) as Box<dyn BaseORAM + 'a>,
+        _ => Box::new(PathORAM::new(args, io)) as Box<dyn BaseORAM + 'a>,
     }
 }
 
