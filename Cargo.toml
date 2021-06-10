@@ -29,6 +29,7 @@ rand_core = { version = "0.6", features = ["std"] }
 vec_map = "0.8.2"
 nohash-hasher = "0.2.0"
 shellexpand = "2.1.0"
+question = "0.2.2"
 
 [dev-dependencies]
 criterion = "0.3"

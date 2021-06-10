@@ -8,6 +8,7 @@ use std::time::Duration;
 use std::{fs, io};
 
 use daemonize::Daemonize;
+use question::{Answer, Question};
 use serde::{Deserialize, Serialize};
 
 use crate::{get_io, BaseORAM, CLISubCommand, PathORAM, BIG_FILE_NAME, ORAMFS};
@@ -352,7 +353,25 @@ impl ORAMManager {
                         panic!("Unsupported ORAM scheme.");
                     }
 
-                    Self::do_double(&mut o, manual);
+                    let oram_size = args.n * args.z * args.b;
+                    let new_size = oram_size * 2;
+
+                    println!(
+                        "You are about to enlarge the ORAM {}'s size from {} to {} bytes.",
+                        o.name, oram_size, new_size
+                    );
+                    println!("This operation is definitive and cannot be reversed.");
+                    let q = "Are you sure you want to proceed?";
+                    let answer = Question::new(q)
+                        .default(Answer::NO)
+                        .show_defaults()
+                        .confirm();
+
+                    if answer == Answer::YES {
+                        Self::do_double(&mut o, manual);
+                    } else {
+                        println!("Aborting enlarge.")
+                    }
                 }
             }
 
