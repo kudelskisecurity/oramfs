@@ -5,6 +5,8 @@ use std::path::Path;
 
 use aes::cipher::generic_array::GenericArray;
 use aes::Aes128Ctr;
+use aes_gcm::aead::{Aead, NewAead, Payload};
+use aes_gcm::{Aes128Gcm, Key as AesGcmKey, Nonce as AesGcmNonce};
 use argon2::PasswordHasher;
 use bytes::{Buf, Bytes, BytesMut};
 use chacha20::cipher::{NewStreamCipher, SyncStreamCipher};
@@ -271,7 +273,9 @@ impl<'a> PathORAM<'a> {
                 debug!("Deriving encryption key from supplied passphrase...");
                 let key_size = match &self.args.cipher[..] {
                     "aes-ctr" => 16,
-                    _ => 32, // ChaCha8
+                    "chacha8" => 32,
+                    "aes-gcm" => 16,
+                    _ => panic!("Unsupported cipher"),
                 };
 
                 let salt = argon2::password_hash::SaltString::new(&self.args.salt)
@@ -503,10 +507,18 @@ impl<'a> PathORAM<'a> {
     /// Encrypt a bucket and return the ciphertext and IV
     fn encrypt_bucket(&self, bucket: Bucket) -> EncryptedBytes {
         let mut data = bincode::serialize(&bucket).unwrap();
-        let iv = self.encrypt(&mut data);
+        let (iv, ct) = self.encrypt(&mut data);
 
         let mut bm = BytesMut::new();
-        bm.extend_from_slice(&data);
+
+        match ct {
+            Some(ciphertext) => {
+                bm.extend_from_slice(&ciphertext);
+            }
+            None => {
+                bm.extend_from_slice(&data);
+            }
+        }
 
         EncryptedBytes {
             iv: Bytes::from(iv),
@@ -519,55 +531,89 @@ impl<'a> PathORAM<'a> {
         let mut data = encrypted_bytes.ciphertext;
         let ciphertext = data.as_byte_slice_mut();
 
-        self.decrypt(encrypted_bytes.iv.bytes(), ciphertext);
-
-        let bucket: Bucket = bincode::deserialize(&ciphertext).unwrap();
-        bucket
-    }
-
-    /// Encrypt the given data
-    fn encrypt(&self, mut data: &mut [u8]) -> Vec<u8> {
-        match &self.args.cipher[..] {
-            "aes-ctr" => {
-                let iv = thread_rng().gen::<[u8; 16]>(); // AES-CTR
-
-                // AES-CTR
-                let key = GenericArray::from_slice(&self.encryption_key);
-                let nonce = GenericArray::from_slice(&iv);
-                let mut cipher = Aes128Ctr::new(key, nonce);
-                cipher.apply_keystream(&mut data);
-                iv.to_vec()
+        match self.decrypt(encrypted_bytes.iv.bytes(), ciphertext) {
+            Some(plaintext) => {
+                // TODO do something
+                let bucket: Bucket = bincode::deserialize(&plaintext).unwrap();
+                bucket
             }
-            _ => {
-                let iv = thread_rng().gen::<[u8; 12]>(); // ChaCha
-
-                // ChaCha
-                let key = Key::from_slice(&self.encryption_key);
-                let nonce = Nonce::from_slice(&iv);
-                let mut cipher = ChaCha8::new(&key, &nonce);
-                cipher.apply_keystream(&mut data);
-                iv.to_vec()
+            None => {
+                let bucket: Bucket = bincode::deserialize(&ciphertext).unwrap();
+                bucket
             }
         }
     }
 
-    /// Decrypt the given data
-    fn decrypt(&self, iv: &[u8], mut data: &mut [u8]) {
+    /// Encrypt the given data
+    fn encrypt(&self, mut data: &mut [u8]) -> (Vec<u8>, Option<Vec<u8>>) {
         match &self.args.cipher[..] {
             "aes-ctr" => {
-                // AES-CTR
+                let iv = thread_rng().gen::<[u8; 16]>();
+
                 let key = GenericArray::from_slice(&self.encryption_key);
                 let nonce = GenericArray::from_slice(&iv);
                 let mut cipher = Aes128Ctr::new(key, nonce);
                 cipher.apply_keystream(&mut data);
+                (iv.to_vec(), None)
             }
-            _ => {
-                // ChaCha
+            "chacha8" => {
+                let iv = thread_rng().gen::<[u8; 12]>();
+
+                let key = Key::from_slice(&self.encryption_key);
+                let nonce = Nonce::from_slice(&iv);
+                let mut cipher = ChaCha8::new(&key, &nonce);
+                cipher.apply_keystream(&mut data);
+                (iv.to_vec(), None)
+            }
+            "aes-gcm" => {
+                let key = AesGcmKey::from_slice(&self.encryption_key);
+                let cipher = Aes128Gcm::new(key);
+
+                let iv = thread_rng().gen::<[u8; 12]>();
+                let nonce = AesGcmNonce::from_slice(&iv);
+
+                let ad = b"oramfs";
+                let payload = Payload { aad: ad, msg: data };
+                let ciphertext = cipher
+                    .encrypt(nonce, payload)
+                    .expect("AES-GCM encryption failure");
+
+                (iv.to_vec(), Some(ciphertext))
+            }
+            _ => panic!("Unsupported cipher."),
+        }
+    }
+
+    /// Decrypt the given data
+    fn decrypt(&self, iv: &[u8], mut data: &mut [u8]) -> Option<Vec<u8>> {
+        match &self.args.cipher[..] {
+            "aes-ctr" => {
+                let key = GenericArray::from_slice(&self.encryption_key);
+                let nonce = GenericArray::from_slice(&iv);
+                let mut cipher = Aes128Ctr::new(key, nonce);
+                cipher.apply_keystream(&mut data);
+                None
+            }
+            "chacha8" => {
                 let key = Key::from_slice(self.encryption_key.as_slice());
                 let nonce = Nonce::from_slice(iv);
                 let mut cipher = ChaCha8::new(&key, &nonce);
                 cipher.apply_keystream(&mut data);
+                None
             }
+            "aes-gcm" => {
+                let key = AesGcmKey::from_slice(&self.encryption_key);
+                let cipher = Aes128Gcm::new(key);
+                let nonce = AesGcmNonce::from_slice(&iv);
+
+                let ad = b"oramfs";
+                let payload = Payload { aad: ad, msg: data };
+                let plaintext = cipher
+                    .decrypt(nonce, payload)
+                    .expect("[SECURITY WARNING] It looks like the ciphertext or tag has been tampered with. Aborting.");
+                Some(plaintext)
+            }
+            _ => panic!("Unsupported cipher."),
         }
     }
 }
