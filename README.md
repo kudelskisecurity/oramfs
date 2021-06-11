@@ -98,7 +98,7 @@ Note: for best performance, see the "Performance" section below.
 First, build `oramfs` using `cargo`:
 
 ```
-cargo build
+cargo build --release
 ```
 
 The `oramfs` binary will be created in the `target/release` directory. For convenience, add it to your `PATH`. Note that
@@ -218,7 +218,7 @@ $ tree
 If performance is not an issue, for a quick build, run:
 
 ```
-cargo build
+cargo build --release
 ```
 
 To get maximum performance, build in release mode and target the native CPU architecture:
