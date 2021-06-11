@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::ffi::OsStr;
-use std::io::Write;
+use std::io::{Error, Write};
 use std::path::Path;
 use std::process::Command;
 use std::thread::sleep;
@@ -359,6 +359,21 @@ impl ORAMManager {
                         return;
                     }
 
+                    // make sure that the ORAM is not mounted
+                    match is_directory_empty(&o.mountpoint) {
+                        Ok(empty) => {
+                            if !empty {
+                                println!("ORAM appears to be mounted. Please unmount it first. Aborting enlarge.");
+                                return;
+                            }
+                        }
+                        Err(e) => {
+                            println!("Cannot determine whether the mountpoint directory is empty or not. Aborting enlarge.");
+                            println!("{}", e);
+                            return;
+                        }
+                    }
+
                     let oram_size = args.n * args.z * args.b;
                     let new_size = oram_size * 2;
 
@@ -601,6 +616,10 @@ pub fn start(args: ORAMConfig, oramfs: ORAMFS) {
     println!("Mounting FUSE filesystem...");
     fuse::mount(oramfs, &args.mountpoint, &options).unwrap();
     println!("Goodbye.");
+}
+
+pub fn is_directory_empty(path: &str) -> Result<bool, Error> {
+    Ok(fs::read_dir(path)?.next().is_none())
 }
 
 #[cfg(test)]
