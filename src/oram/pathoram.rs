@@ -533,7 +533,6 @@ impl<'a> PathORAM<'a> {
 
         match self.decrypt(encrypted_bytes.iv.bytes(), ciphertext) {
             Some(plaintext) => {
-                // TODO do something
                 let bucket: Bucket = bincode::deserialize(&plaintext).unwrap();
                 bucket
             }
