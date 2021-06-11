@@ -593,10 +593,6 @@ impl ORAMManager {
 
 /// Get a directory in /tmp matching the oram name such as /tmp/oramfs_{oram_name}
 fn get_default_mountpoint(args: &mut ORAMConfig) -> String {
-    // let parent = Path::new(&args.private_directory)
-    //     .parent()
-    //     .expect("Cannot find parent directory");
-    // parent.join(&args.name).to_str().unwrap().to_string()
     let tmp = Path::new("/tmp");
     let mountpoint = tmp.join(format!("oramfs_{}", args.name));
     mountpoint.to_str().unwrap().to_string()

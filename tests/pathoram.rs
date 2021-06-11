@@ -54,30 +54,11 @@ fn copy_file_and_check() {
     let offset = 0;
     let file_bytes = vec![42; file_length as usize];
 
-    // main invariant before write
-    // assert_eq!(oramfs.oram.test_state(), true);
-
     // copy file
     let _ = oramfs.split_write(offset, &file_bytes);
 
-    // main invariant before read
-    // assert_eq!(oramfs.oram.test_state(), true);
-
     // compare written file to the original one
     let bytes_read = oramfs.split_read(file_length as u32, offset);
-
-    // let mut same_bytes = 0;
-    // for i in 0..file_length as usize {
-    //     let original_byte = file_bytes.get(i).unwrap();
-    //     let byte_read = bytes_read.get(i).unwrap();
-    //
-    //     if original_byte == byte_read {
-    //         same_bytes += 1;
-    //     }
-    // }
-
-    // main invariant after read
-    // assert_eq!(oramfs.oram.test_state(), true);
 
     assert_eq!(bytes_read, file_bytes);
 }
