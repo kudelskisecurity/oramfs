@@ -5,7 +5,7 @@ use vec_map::VecMap;
 
 /// Node of a binary tree.
 ///
-/// This binary tree implementation has limited functionaly and is tailored
+/// This binary tree implementation has limited functionality and is tailored
 /// specifically for the PathORAM use case.
 pub struct TreeNode {
     /// Value of the node

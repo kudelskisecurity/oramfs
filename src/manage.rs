@@ -310,7 +310,7 @@ impl ORAMManager {
         let mut mountpoint_input = String::new();
         let default_mountpoint = get_default_mountpoint(args);
         println!(
-            "Please enter path to mointpoint directory to use, or press enter to use default [default: {}]:",
+            "Please enter path to mountpoint directory to use, or press enter to use default [default: {}]:",
             default_mountpoint
         );
         io::stdin()
@@ -497,7 +497,7 @@ impl ORAMManager {
         let args_clone2 = args.clone();
         let args_clone3 = args.clone();
         let mut daemonize = Daemonize::new().working_directory(".");
-        println!("Running as a deamon...");
+        println!("Running as a daemon...");
         if !manual {
             daemonize = daemonize.exit_action(move || Self::resize2fs_enlarge(args_clone3));
         } else {
