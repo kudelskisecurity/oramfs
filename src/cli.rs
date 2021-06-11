@@ -63,9 +63,9 @@ pub enum CLISubCommand {
 
         #[structopt(
         long = "cipher",
-        default_value = "chacha8",
+        default_value = "aes-gcm",
         help = "Cipher to use for encryption.",
-        possible_values = &["chacha8", "aes-ctr"],
+        possible_values = &["chacha8", "aes-ctr", "aes-gcm"],
         )]
         cipher: String,
 
