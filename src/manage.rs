@@ -353,6 +353,12 @@ impl ORAMManager {
                         panic!("Unsupported ORAM scheme.");
                     }
 
+                    // check that init=true in config
+                    if !o.init {
+                        println!("It looks like this ORAM has not been initialized yet. Aborting enlarge.");
+                        return;
+                    }
+
                     let oram_size = args.n * args.z * args.b;
                     let new_size = oram_size * 2;
 
