@@ -7,8 +7,12 @@ use std::thread::sleep;
 use std::time::Duration;
 use std::{fs, io};
 
+use aes_gcm::aead::{Aead, NewAead, Payload};
+use aes_gcm::{Aes256Gcm, Key as AesGcmKey, Nonce as AesGcmNonce};
+use argon2::PasswordHasher;
 use daemonize::Daemonize;
 use question::{Answer, Question};
+use rand::{thread_rng, Rng};
 use serde::{Deserialize, Serialize};
 
 use crate::{get_io, BaseORAM, CLISubCommand, PathORAM, BIG_FILE_NAME, ORAMFS};
@@ -29,7 +33,7 @@ pub struct ORAMConfig {
     pub algorithm: String,
     pub cipher: String,
     pub client_data_dir: String,
-    pub encryption_key_file: String,
+    pub encrypted_encryption_key: String,
     pub encryption_passphrase: String,
     pub salt: String,
     pub io: String,
@@ -85,7 +89,7 @@ impl ORAMManager {
             public,
             private,
             disable_encryption,
-            encryption_key_file,
+            encrypted_encryption_key,
             algorithm,
             io,
             client_data_dir,
@@ -127,7 +131,7 @@ impl ORAMManager {
                 disable_encryption,
                 manual: false,
                 client_data_dir,
-                encryption_key_file,
+                encrypted_encryption_key,
                 mountpoint: mountpoint.clone(),
                 encryption_passphrase: "".to_string(),
                 salt: String::new(),
@@ -242,6 +246,109 @@ impl ORAMManager {
             }
         }
         Self::save_config(&config);
+    }
+
+    pub fn generate_encryption_key(
+        name: String,
+        passphrase: String,
+        salt: String,
+        cipher: String,
+    ) -> String {
+        let mut config = Self::get_config();
+
+        // derive key from passphrase
+        let derived_key = ORAMManager::derive_key(&passphrase, &salt);
+
+        // generate encryption key
+        let key_size = match &cipher[..] {
+            "aes-ctr" => 16,
+            "chacha8" => 32,
+            "aes-gcm" => 16,
+            _ => panic!("Unsupported cipher"),
+        };
+
+        let encryption_key: Vec<u8> = (0..key_size as usize)
+            .map(|_| rand::random::<u8>())
+            .collect();
+
+        // encrypt encryption key
+        let (ciphertext, nonce) = match Self::encrypt_key(derived_key, encryption_key) {
+            Ok((c, n)) => (c, n),
+            Err(_) => panic!("Failed to encrypt encryption key"),
+        };
+
+        let encrypted_encryption_key = Self::serialize_key(ciphertext, nonce);
+
+        for mut oram_config in config.orams.iter_mut() {
+            if oram_config.name == name {
+                oram_config.encrypted_encryption_key = encrypted_encryption_key.clone();
+            }
+        }
+        Self::save_config(&config);
+        encrypted_encryption_key
+    }
+
+    pub fn serialize_key(encrypted_key: Vec<u8>, nonce: Vec<u8>) -> String {
+        let key = base64::encode(encrypted_key);
+        let n = base64::encode(nonce);
+        format!("{}:{}", key, n)
+    }
+
+    pub fn deserialize_key(serialized_key: String) -> (Vec<u8>, Vec<u8>) {
+        let splits: Vec<&str> = serialized_key.split(':').collect();
+        let b64_key = splits[0];
+        let b64_nonce = splits[1];
+        let key = base64::decode(b64_key).expect("Failed to decode key");
+        let nonce = base64::decode(b64_nonce).expect("Failed to decode nonce");
+        (key, nonce)
+    }
+
+    pub fn encrypt_key(
+        key: Vec<u8>,
+        cleartext: Vec<u8>,
+    ) -> Result<(Vec<u8>, Vec<u8>), aes_gcm::Error> {
+        let key = AesGcmKey::from_slice(&key);
+        let cipher = Aes256Gcm::new(key);
+
+        let nonce = thread_rng().gen::<[u8; 12]>();
+        let gcm_nonce = AesGcmNonce::from_slice(&nonce);
+
+        let ad = b"oramfs";
+        let payload = Payload {
+            aad: ad,
+            msg: &cleartext,
+        };
+        let ciphertext = cipher.encrypt(gcm_nonce, payload)?;
+        Ok((ciphertext, nonce.to_vec()))
+    }
+
+    pub fn decrypt_key(
+        key: Vec<u8>,
+        ciphertext: Vec<u8>,
+        nonce: Vec<u8>,
+    ) -> Result<Vec<u8>, aes_gcm::Error> {
+        let key = AesGcmKey::from_slice(&key);
+        let cipher = Aes256Gcm::new(key);
+        let gcm_nonce = AesGcmNonce::from_slice(&nonce);
+
+        let ad = b"oramfs";
+        let payload = Payload {
+            aad: ad,
+            msg: &ciphertext,
+        };
+        let cleartext = cipher.decrypt(gcm_nonce, payload)?;
+        Ok(cleartext)
+    }
+
+    pub fn is_passphrase_valid(
+        passphrase: String,
+        salt: String,
+        encrypted_encryption_key: String,
+    ) -> bool {
+        let derived_key = Self::derive_key(&passphrase, &salt);
+        let (ciphertext, nonce) = Self::deserialize_key(encrypted_encryption_key);
+
+        ORAMManager::decrypt_key(derived_key, ciphertext, nonce).is_ok()
     }
 
     /// Interactively ask ORAM parameters from the user
@@ -571,6 +678,25 @@ impl ORAMManager {
         }
 
         final_passphrase
+    }
+
+    /// Derive a key from the given passphrase and salt
+    pub fn derive_key(passphrase: &str, salt: &str) -> Vec<u8> {
+        let salt = argon2::password_hash::SaltString::new(salt).expect("Failed to parse salt");
+        let password = passphrase.as_bytes();
+        let argon2 = argon2::Argon2::default();
+
+        let params = argon2::Params {
+            ..Default::default() // use default params
+        };
+
+        let output = argon2
+            .hash_password(password, None, params, salt.as_salt())
+            .unwrap()
+            .hash
+            .unwrap();
+        let derived_key = Vec::from(output.as_bytes());
+        derived_key
     }
 }
 

@@ -7,7 +7,6 @@ use aes::cipher::generic_array::GenericArray;
 use aes::Aes128Ctr;
 use aes_gcm::aead::{Aead, NewAead, Payload};
 use aes_gcm::{Aes128Gcm, Key as AesGcmKey, Nonce as AesGcmNonce};
-use argon2::PasswordHasher;
 use bytes::{Buf, Bytes, BytesMut};
 use chacha20::cipher::{NewStreamCipher, SyncStreamCipher};
 use chacha20::{ChaCha8, Key, Nonce};
@@ -21,7 +20,7 @@ use serde::{Deserialize, Serialize};
 use crate::io::BaseIOService;
 use crate::oram::pathoram::tree::TreeNode;
 use crate::oram::BaseORAM;
-use crate::ORAMConfig;
+use crate::{ORAMConfig, ORAMManager};
 
 pub mod tree;
 
@@ -262,41 +261,17 @@ impl<'a> PathORAM<'a> {
     /// stretched to the appropriate size for the selected cipher.
     pub fn load_encryption_key(&mut self) {
         if !self.args.disable_encryption {
-            if self.args.encryption_passphrase.is_empty() {
-                debug!("Loading encryption key from file...");
-                self.encryption_key = self.io.read_file(self.args.encryption_key_file.clone());
-                assert!(
-                    !self.encryption_key.is_empty(),
-                    "Encryption key file is empty"
-                );
-            } else {
-                debug!("Deriving encryption key from supplied passphrase...");
-                let key_size = match &self.args.cipher[..] {
-                    "aes-ctr" => 16,
-                    "chacha8" => 32,
-                    "aes-gcm" => 16,
-                    _ => panic!("Unsupported cipher"),
-                };
+            let derived_key =
+                ORAMManager::derive_key(&self.args.encryption_passphrase, &self.args.salt);
 
-                let salt = argon2::password_hash::SaltString::new(&self.args.salt)
-                    .expect("Failed to parse salt");
-                let password = self.args.encryption_passphrase.as_bytes();
-                let argon2 = argon2::Argon2::default();
+            // decrypt encryption key using derived_key
+            let (ciphertext, nonce) =
+                ORAMManager::deserialize_key(self.args.clone().encrypted_encryption_key);
+            let encryption_key = ORAMManager::decrypt_key(derived_key, ciphertext, nonce)
+                .expect("Failed to load encryption key. Invalid passphrase?");
 
-                let params = argon2::Params {
-                    output_size: key_size,
-                    ..Default::default() // remaining params are default
-                };
-
-                let output = argon2
-                    .hash_password(password, None, params, salt.as_salt())
-                    .unwrap()
-                    .hash
-                    .unwrap();
-                let derived_key = Vec::from(output.as_bytes());
-
-                self.encryption_key = derived_key;
-            }
+            // set encryption_key to decrypted_key
+            self.encryption_key = encryption_key;
         }
     }
 
@@ -633,7 +608,7 @@ mod tests {
             algorithm: "".to_string(),
             cipher: "".to_string(),
             client_data_dir: "".to_string(),
-            encryption_key_file: "".to_string(),
+            encrypted_encryption_key: "".to_string(),
             encryption_passphrase: "".to_string(),
             salt: "".to_string(),
             io: "".to_string(),
@@ -688,9 +663,10 @@ mod tests {
         let io = Box::new(MemoryIOService::new());
 
         let mut pathoram = PathORAM::new(&args, io);
-        pathoram
-            .io
-            .write_file(args.encryption_key_file.clone(), vec![66; 32].as_slice());
+        pathoram.io.write_file(
+            args.encrypted_encryption_key.clone(),
+            vec![66; 32].as_slice(),
+        );
         pathoram.setup();
 
         assert_eq!(pathoram.verify_main_invariant(), true);

@@ -32,11 +32,11 @@ pub enum CLISubCommand {
         disable_encryption: bool,
 
         #[structopt(
-            long = "encryption-key-file",
+            long = "encrypted-encryption-key",
             default_value = "",
-            help = "Path to the file containing the encryption key bytes"
+            help = "AEAD encrypted encryption key"
         )]
-        encryption_key_file: String,
+        encrypted_encryption_key: String,
 
         #[structopt(
         long = "alg",

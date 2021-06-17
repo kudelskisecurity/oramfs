@@ -280,26 +280,6 @@ mount -o sync private/oram mnt/
 echo "hello oram" > mnt/hello.txt
 ```
 
-## Encryption key file
-
-It is possible to create an encryption key file instead of using a passphrase to derive a key. Configure the path to the
-key file in the ORAMFS configuration file. Depending on the `cipher` used, the key should have a specific size.
-
-For `chacha8`, use a 32 bytes (256 bits) key:
-
-```
-dd if=/dev/urandom of=/path/to/client-data/encryption_key bs=32 count=1
-```
-
-For `aes-ctr`, use a 16 bytes (128 bits) key:
-
-```
-dd if=/dev/urandom of=/path/to/client-data/encryption_key_16 bs=16 count=1
-```
-
-Note that the bytes in encryption key files are directly used and therefore it is the user's responsibility to securely
-store them, for exampled on an encrypted detachable storage (e.g. USB thumb drive).
-
 ## Using another filesystem than ext4
 
 `oramfs` supports any filesystem. To use something different than the default ext4, do the following.

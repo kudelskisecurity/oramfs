@@ -9,7 +9,7 @@ pub fn cli_for_oram(oram: String, disable_encryption: bool) -> ORAMConfig {
         algorithm: "".to_string(),
         cipher: "".to_string(),
         client_data_dir: "".to_string(),
-        encryption_key_file: "".to_string(),
+        encrypted_encryption_key: "".to_string(),
         encryption_passphrase: "".to_string(),
         salt: "".to_string(),
         io: "".to_string(),

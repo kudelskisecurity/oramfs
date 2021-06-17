@@ -152,20 +152,36 @@ pub fn oram_mount(oram_name: String, cmd: CLISubCommand) {
                     c.init = true;
 
                     // ask for passphrase first time
-                    if c.encryption_key_file.is_empty() {
-                        let passphrase = ORAMManager::get_passphrase_first_time();
-                        c.encryption_passphrase = passphrase;
-                    }
+                    let passphrase = ORAMManager::get_passphrase_first_time();
+                    c.encryption_passphrase = passphrase.clone();
+
+                    // generate encryption key and save it encrypted to config file
+                    c.encrypted_encryption_key = ORAMManager::generate_encryption_key(
+                        c.name.clone(),
+                        passphrase,
+                        c.salt.clone(),
+                        c.cipher.clone(),
+                    );
 
                     // update init status in config file
                     ORAMManager::mark_init(c.name.clone());
+                    c.init = true;
                 } else {
                     c.init = init;
 
                     // ask for passphrase
-                    if c.encryption_key_file.is_empty() {
-                        let passphrase = ORAMManager::get_passphrase();
-                        c.encryption_passphrase = passphrase;
+                    let passphrase = ORAMManager::get_passphrase();
+                    c.encryption_passphrase = passphrase.clone();
+
+                    // check passphrase
+                    let valid_passphrase = ORAMManager::is_passphrase_valid(
+                        passphrase,
+                        c.salt.clone(),
+                        c.encrypted_encryption_key.clone(),
+                    );
+                    if !valid_passphrase {
+                        eprintln!("[Error] Invalid passphrase. Aborting.");
+                        return;
                     }
                 }
 

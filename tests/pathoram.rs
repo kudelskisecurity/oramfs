@@ -12,7 +12,7 @@ fn test_init() {
 
     let mut io = get_io(&args);
     let encryption_key = vec![33; 32];
-    io.write_file(args.encryption_key_file.clone(), &encryption_key);
+    io.write_file(args.encrypted_encryption_key.clone(), &encryption_key);
     let mut oram = PathORAM::new(&args, io);
     if args.init {
         oram.init();
@@ -33,7 +33,7 @@ fn copy_file_and_check() {
 
     let mut io = get_io(&args);
     let encryption_key = vec![33; 32];
-    io.write_file(args.encryption_key_file.clone(), &encryption_key);
+    io.write_file(args.encrypted_encryption_key.clone(), &encryption_key);
     let mut oram = PathORAM::new(&args, io);
     if args.init {
         oram.init();

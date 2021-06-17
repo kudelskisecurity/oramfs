@@ -11,7 +11,7 @@ pub fn cli_for_oram(oram: String, disable_encryption: bool) -> ORAMConfig {
         algorithm: "".to_string(),
         cipher: "".to_string(),
         client_data_dir: "".to_string(),
-        encryption_key_file: "".to_string(),
+        encrypted_encryption_key: "".to_string(),
         encryption_passphrase: "".to_string(),
         salt: "".to_string(),
         io: "".to_string(),
@@ -44,7 +44,7 @@ fn bench_throughput(c: &mut Criterion) {
 
     let mut io = get_io(&args);
     let encryption_key = vec![33; 32];
-    io.write_file(args.encryption_key_file.clone(), &encryption_key);
+    io.write_file(args.encrypted_encryption_key.clone(), &encryption_key);
     let mut oram = PathORAM::new(&args, io);
     if args.init {
         oram.init();
