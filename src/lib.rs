@@ -6,7 +6,6 @@ pub use manage::start;
 pub use manage::ORAMConfig;
 pub use manage::ORAMFSConfig;
 pub use manage::ORAMManager;
-pub use manage::PASSPHRASE_ENV_VAR_KEY;
 pub use oram::get_oram;
 pub use oram::pathoram::tree::TreeNode;
 pub use oram::pathoram::PathORAM;

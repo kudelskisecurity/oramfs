@@ -246,15 +246,6 @@ Run the produced executable directly or run it via cargo with `cargo run --relea
 
 Show help with `cargo run -- -h`
 
-## Non-interactive passphrase usage
-
-The passphrase can be passed via the `ORAMFS_PASSPHRASE` environment variable. This works both for mounting the first
-time (initialization) and future mounts.
-
-```
-ORAMFS_PASSPHRASE=mysupersecretpassphrase oramfs mount myoram
-```
-
 ## Foreground mode
 
 By default, the ORAMFS runs in the background. Use `--foreground` to avoid that.
