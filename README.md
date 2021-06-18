@@ -114,26 +114,26 @@ The mounted private file can be used to setup a loop device using `losetup`. The
 created on top of that loop device. `oramfs` automates this process, but also lets users do it manually if they want to.
 
 ```
-+-----------------------------------------------------+
-|                                                     |
-|                   ext4 filesystem                   | <---+ or any other FS or your choice
-|                                                     |
-+-----------------------------------------------------+
-|                                                     |
-|               Loop device (/dev/loop0)              | <---+ created with losetup
-|                                                     |
-+-----------------------------------------------------+
-|                                                     |
-|                    ORAMFS (FUSE)                    | <---+ Input  : *public* local directory
-|                                                     |       Output : *private* single file, 
-+-------------------+-----------------+---------------+                for use with loop device
-|                   |                 |               |
-|  Local directory  |  Cloud storage  |     SSHFS     | <---+ Input directory can be anything
-|                   |                 |               |       that appears as a local directory,
-+-------------------+-----------------+---------------+       including mounted remote directories.
-                                                              Examples: SSH, FTP, anything supported
-                                                              by rclone or similar tools, 
-                                                              any mounted FUSE filesystem, etc.
++---------------------------------------------------+
+|                                                   |
+|                   ext4 filesystem                 | <---+ or any other FS or your choice
+|                                                   |
++---------------------------------------------------+
+|                                                   |
+|               Loop device (/dev/loop0)            | <---+ created with losetup
+|                                                   |
++---------------------------------------------------+
+|                                                   |
+|                    ORAMFS (FUSE)                  | <---+ Input  : *public* local directory
+|                                                   |       Output : *private* single file, 
++-------------------+-----------------+-------------+                for use with loop device
+|                   |                 |             |
+|  Local directory  |  Cloud storage  |    SSHFS    | <---+ Input directory can be anything
+|                   |                 |             |       that appears as a local directory,
++-------------------+-----------------+-------------+       including mounted remote directories.
+                                                            Examples: SSH, FTP, anything supported
+                                                            by rclone or similar tools, 
+                                                            any mounted FUSE filesystem, etc.
 ```
 
 Before using ORAMFS:
