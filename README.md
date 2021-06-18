@@ -18,7 +18,8 @@ backup important data before using this software.
 On an encrypted filesystem, an ORAM prevents an attacker from knowing whether read or write operations are performed and
 which parts of the filesystem are accessed. This privacy comes with a loss of performance.
 
-To setup the ORAM, two inputs are required. A public directory and a private directory.
+To setup the ORAM, two inputs are required. A public directory and a private directory. The public directory can be seen
+as the server and the private directory as the client.
 
 The public directory can be any local directory, including remote data mounted as a local directory. Hence, hiding
 access patterns to a remote SSH directory or to a remote cloud storage is possible. Indeed, these remote storages simply
@@ -40,15 +41,13 @@ directory.
 
 Install Rust using [rustup](https://rustup.rs/) if it is not installed yet.
 
-Note: for best performance, see the "Performance" section below.
-
 First, build `oramfs` using `cargo`:
 
 ```
 cargo build --release
 ```
 
-To get maximum performance, build in release mode and target the native CPU:
+To get maximum performance and take advantage of native CPU instructions (AES-NI), build in release mode and target the native CPU:
 
 ```
 RUSTFLAGS="-Ctarget-cpu=native" cargo build --release
@@ -145,11 +144,12 @@ $ tree
 └── public   <---+ this is the directory that the attacker can see ("public" directory)
 ```
 
-When ORAMFS is in use, every operation done in "mnt" - or directly on the "oram" private file - appears ORAMified in
-the "public" directory. In the standard use case, the user does not directly modify the
-"oram" private file, but instead uses a higher level abstraction (the filesystem in the "mnt" directory). The user
-typically mounts their public cloud storage to the "public" directory before running ORAMFS, so that the public files
-are transparently synchronized to the cloud in a privacy-preserving way.
+When ORAMFS is in use, every operation done in the "private" directory - or directly on the "oram" private file in the 
+mountpoint directory - appears ORAMified in the "public" directory.
+In the standard use case, the user does not directly modify the "oram" private file, but instead uses a higher level 
+abstraction (the filesystem in the "private" directory).
+The user  typically mounts their public cloud storage to the "public" directory before running ORAMFS, so that 
+the public files are transparently synchronized to the cloud in a privacy-preserving way.
 
 ```
 $ tree
@@ -169,6 +169,8 @@ $ tree
 # Example with remote storage
 
 In this example, we go through the setup of an ORAM that transparently synchronizes data to a remote FTP server.
+Of course, one could use any other remote storage (SSH server, Google Drive, etc.). Anything that can be mounted as 
+a local directory.
 
 We assume that an `rclone` remote has already been configured for an FTP server you have access to,
 using `rclone config`. The `rclone` config file should have an entry for that remote, similar to:
@@ -219,8 +221,6 @@ When finished, unmount it:
 That's it! Files written/read to/from the private directory are encrypted and access patterns are hidden to the FTP
 server. For more details, make sure to read the Privacy section below.
 
-
-
 # Configuration
 
 The main configuration file is located at `~/.config/oramfs/oramfs.yml`. Existing ORAM profiles can be modified by
@@ -240,9 +240,9 @@ Show help with `cargo run -- -h`
 
 ## Foreground mode
 
-By default, the ORAMFS runs in the background. Use `--foreground` to avoid that.
+By default, `oramfs` runs in the background. Use `--foreground` to avoid that.
 
-Note that when ORAMFS runs in the foreground, it implies that manual mode is used.
+Note that when `oramfs` runs in the foreground, it implies that manual mode is used.
 
 ```
 oramfs mount myoram --foreground
@@ -314,10 +314,10 @@ initialized.
 
 ## Using other ORAM schemes than Path ORAM
 
-This prototype currently only implements Path ORAM, but it is built so that more schemes can be added in the future. To
-prove this, there is a second scheme named `fakeoram` built-in, but it should not be used in production because it is
-not a true ORAM. FakeORAM is a "Hello World" example ORAM scheme that could be useful for developers who want to add new
-ORAM schemes to `oramfs`.
+This prototype currently only implements [Path ORAM](https://eprint.iacr.org/2013/280.pdf), but it is built so that more 
+schemes can be added in the future. To prove this, there is a second scheme named `fakeoram` built-in, but it should not 
+be used in production because it is not a true ORAM. FakeORAM is a "Hello World" example ORAM scheme that could be 
+useful for developers who want to add new ORAM schemes to `oramfs`.
 
 To use another scheme, such as `fakeoram`, update the configuration file and change the `algorithm` entry to `fakeoram`.
 Then simply mount and initialize the oram.
@@ -342,8 +342,10 @@ sync; echo 1 > /proc/sys/vm/drop_caches
 
 # Performance
 
-When native CPU instructions can be used, AES-CTR may be faster than ChaCha8. Changing the cipher can be achieved by
-passing `--cipher aes-ctr`.
+When native CPU instructions can be used, AES may be faster than ChaCha8. Changing the cipher can be achieved by
+passing the `--cipher aes-ctr` or `--cipher aes-gcm` flag on adding an ORAM, for example. One can also directly edit
+the configuration file and reinitialize the ORAM with the updated cipher. Note that this will destroy any data in the
+ORAM, so proceed with caution when initializing an ORAM.
 
 To achieve the best performance, make sure to build or run using `cargo`'s `--release` flag and to pass
 the `RUSTFLAGS="-Ctarget-cpu=native"` environment variable.
