@@ -108,8 +108,9 @@ Then it can be mounted as usual and its size will be larger than before.
 
 Instead of implementing a full filesystem, `oramfs` only provides a mounted file. Therefore, the user is expected to
 create a filesystem on top of that file using a loop device, the filesystem of their choice and finally mounting that
-filesystem. Note that such operations usually require root privileges and therefore `oramfs` should be run as root to
-work properly.
+filesystem. Note that such operations usually require root privileges and therefore `oramfs` requires those privileges
+for mounting. Sudo is called to achieve this, and therefore, `oramfs` can simply be run as a regular user. It will 
+prompt for your password when sudo is called for mount-related operations.
 
 `oramfs` takes a public directory as input and exposes a single private file, which is a proxy for read and write
 operations so that they are privacy-preserving thanks to an ORAM scheme.
@@ -345,12 +346,6 @@ operations, underlying write operations are performed. This can significantly re
 # Limitations and future work
 
 Note that `oramfs` is still a prototype and has the following known limitations.
-
-## Root privileges
-
-Note that `oramfs` requires to be run as root. The reason for this is that this software relies on an external
-additional layer, to obtain a working filesystem, such as setting up a loop device, formatting it as ext4, and more
-importantly, mounting it.
 
 ## Memory zeroization
 
