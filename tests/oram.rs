@@ -21,6 +21,7 @@ pub fn cli_for_oram(oram: String, disable_encryption: bool) -> ORAMConfig {
         manual: false,
         foreground: false,
         interactive: false,
+        phc: "".to_string(),
     };
     args.algorithm = oram;
     args.disable_encryption = disable_encryption;

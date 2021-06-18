@@ -619,6 +619,7 @@ mod tests {
             manual: false,
             foreground: false,
             interactive: false,
+            phc: "".to_string(),
         };
         args.algorithm = "pathoram".to_string();
         args.disable_encryption = disable_encryption;
