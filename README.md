@@ -230,12 +230,6 @@ and therefore, it's not possible to change those options without losing the data
 
 # Advanced Usage
 
-Note that `oramfs` requires to be run as root. The reason for this is that this software relies on an external
-additional layer, to obtain a working filesystem, such as setting up a loop device, formatting it as ext4, and more
-importantly, mounting it.
-
-Run the produced executable directly or run it via cargo with `cargo run --release`.
-
 Show help with `cargo run -- -h`
 
 ## Foreground mode
@@ -328,18 +322,6 @@ The `public` directory can be safely mirrored to the cloud, without the cloud pr
 accessed and whether read or write operations were performed. One scenario would be to mount a remote Google Drive
 directory as the `public` directory, and use that `public` directory as the public directory for the ORAMFS.
 
-## Read caching
-
-If reads are cached, then the ORAM won't perform any work on cached reads. This is a privacy issue because it would mean
-that if all reads are cached, then we can be sure that any modification to the public directory must be a write
-operation.
-
-To avoid read caching, on Linux, always clear the kernel cache before reading a file from the ORAM:
-
-```
-sync; echo 1 > /proc/sys/vm/drop_caches
-```
-
 # Performance
 
 When native CPU instructions can be used, AES may be faster than ChaCha8. Changing the cipher can be achieved by
@@ -354,6 +336,33 @@ the `RUSTFLAGS="-Ctarget-cpu=native"` environment variable.
 
 For each read or write operation, the ORAM scheme actually performs multiple operations under the scenes. Even for read
 operations, underlying write operations are performed. This can significantly reduce the lifespan of SSDs.
+
+# Limitations and future work
+
+Note that `oramfs` is still a prototype and has the following known limitations.
+
+## Root privileges
+
+Note that `oramfs` requires to be run as root. The reason for this is that this software relies on an external
+additional layer, to obtain a working filesystem, such as setting up a loop device, formatting it as ext4, and more
+importantly, mounting it.
+
+## Memory zeroization
+
+Memory is currently not zeroized on exit/crash. An attacker may be able to extract private keys or passphrases from
+non-zeroized memory.
+
+## Read caching
+
+If reads are cached, then the ORAM won't perform any work on cached reads. This is a privacy issue because it would mean
+that if all reads are cached, then we can be sure that any modification to the public directory must be a write
+operation.
+
+To avoid read caching, on Linux, always clear the kernel cache before reading a file from the ORAM:
+
+```
+sync; echo 1 > /proc/sys/vm/drop_caches
+```
 
 # Testing
 
