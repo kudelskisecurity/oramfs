@@ -7,7 +7,7 @@
 * **Cloud storage agnostic** - synchronize your files to any remote server that can be mounted as a local directory
 * **Filesystem agnostic** - ext4 is used by default. Manual mode let you use the filesystem you like.
 * Supports **multiple encryption ciphers** - ChaCha8, AES-CTR
-* Supports **multiple ORAM schemes** - Path ORAM, etc.
+* Supports **multiple ORAM schemes** - [Path ORAM](https://eprint.iacr.org/2013/280.pdf), etc.
 * Written in **Rust** - Avoids memory safety issues, great performance
 
 **DISCLAIMER** `oramfs` is a prototype and may not be ready for production. It may erase some of your data. Make sure to
