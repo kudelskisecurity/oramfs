@@ -34,6 +34,7 @@ pub struct ORAMConfig {
     pub cipher: String,
     pub client_data_dir: String,
     pub encrypted_encryption_key: String,
+    pub phc: String,
     pub encryption_passphrase: String,
     pub salt: String,
     pub io: String,
@@ -140,6 +141,7 @@ impl ORAMManager {
                 interactive: false,
                 init: false,
                 foreground: false,
+                phc: "".to_string(),
             };
 
             // ask for some params interactively
@@ -265,7 +267,7 @@ impl ORAMManager {
         let mut config = Self::get_config();
 
         // derive key from passphrase
-        let derived_key = ORAMManager::derive_key(&passphrase, &salt);
+        let (derived_key, phc) = ORAMManager::derive_key(&passphrase, &salt);
 
         // generate encryption key
         let key_size = match &cipher[..] {
@@ -290,6 +292,7 @@ impl ORAMManager {
         for mut oram_config in config.orams.iter_mut() {
             if oram_config.name == name {
                 oram_config.encrypted_encryption_key = encrypted_encryption_key.clone();
+                oram_config.phc = phc.clone();
             }
         }
         Self::save_config(&config);
@@ -353,7 +356,7 @@ impl ORAMManager {
     }
 
     /// Derive a key from the given passphrase and salt
-    pub fn derive_key(passphrase: &str, salt: &str) -> Vec<u8> {
+    pub fn derive_key(passphrase: &str, salt: &str) -> (Vec<u8>, String) {
         let salt = argon2::password_hash::SaltString::new(salt).expect("Failed to parse salt");
         let password = passphrase.as_bytes();
         let argon2 = argon2::Argon2::default();
@@ -362,13 +365,15 @@ impl ORAMManager {
             ..Default::default() // use default params
         };
 
-        let output = argon2
+        let hashed_password = argon2
             .hash_password(password, None, params, salt.as_salt())
-            .unwrap()
-            .hash
             .unwrap();
+
+        let phc = hashed_password.to_string();
+
+        let output = hashed_password.hash.unwrap();
         let derived_key = Vec::from(output.as_bytes());
-        derived_key
+        (derived_key, phc)
     }
 
     /// Return true if the given passphrase is valid
@@ -379,7 +384,7 @@ impl ORAMManager {
         salt: String,
         encrypted_encryption_key: String,
     ) -> bool {
-        let derived_key = Self::derive_key(&passphrase, &salt);
+        let (derived_key, _) = Self::derive_key(&passphrase, &salt);
         let (ciphertext, nonce) = Self::deserialize_key(encrypted_encryption_key);
 
         ORAMManager::decrypt_key(derived_key, ciphertext, nonce).is_ok()

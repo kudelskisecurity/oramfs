@@ -259,7 +259,7 @@ impl<'a> PathORAM<'a> {
     /// using this master key to decrypt the actual encryption key for this ORAM.
     pub fn load_encryption_key(&mut self) {
         if !self.args.disable_encryption {
-            let derived_key =
+            let (derived_key, _) =
                 ORAMManager::derive_key(&self.args.encryption_passphrase, &self.args.salt);
 
             // decrypt encryption key using derived_key
