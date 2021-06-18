@@ -100,6 +100,72 @@ oramfs enlarge myoram
 
 Then it can be mounted as usual and its size will be larger than before.
 
+# How does it work?
+
+Instead of implementing a full filesystem, `oramfs` only provides a mounted file. Therefore, the user is expected to
+create a filesystem on top of that file using a loop device, the filesystem of their choice and finally mounting that
+filesystem. Note that such operations usually require root privileges and therefore `oramfs` should be run as root to
+work properly.
+
+`oramfs` takes a public directory as input and exposes a single private file, which is a proxy for read and write
+operations so that they are privacy-preserving thanks to an ORAM scheme.
+
+The mounted private file can be used to setup a loop device using `losetup`. Then, any filesystem, such as ext4 can be
+created on top of that loop device. `oramfs` automates this process, but also lets users do it manually if they want to.
+
+```
++-----------------------------------------------------+
+|                                                     |
+|                   ext4 filesystem                   | <---+ or any other FS or your choice
+|                                                     |
++-----------------------------------------------------+
+|                                                     |
+|               Loop device (/dev/loop0)              | <---+ created with losetup
+|                                                     |
++-----------------------------------------------------+
+|                                                     |
+|                    ORAMFS (FUSE)                    | <---+ Input  : *public* local directory
+|                                                     |       Output : *private* single file, 
++-------------------+-----------------+---------------+                for use with loop device
+|                   |                 |               |
+|  Local directory  |  Cloud storage  |     SSHFS     | <---+ Input directory can be anything
+|                   |                 |               |       that appears as a local directory,
++-------------------+-----------------+---------------+       including mounted remote directories.
+                                                              Examples: SSH, FTP, anything supported
+                                                              by rclone or similar tools, 
+                                                              any mounted FUSE filesystem, etc.
+```
+
+Before using ORAMFS:
+
+```
+$ tree
+.
+├── private  <---+ empty directory
+└── public   <---+ this is the directory that the attacker can see ("public" directory)
+```
+
+When ORAMFS is in use, every operation done in "mnt" - or directly on the "oram" private file - appears ORAMified in
+the "public" directory. In the standard use case, the user does not directly modify the
+"oram" private file, but instead uses a higher level abstraction (the filesystem in the "mnt" directory). The user
+typically mounts their public cloud storage to the "public" directory before running ORAMFS, so that the public files
+are transparently synchronized to the cloud in a privacy-preserving way.
+
+```
+$ tree
+.
+├── mnt
+│   └── lost+found
+│   └── very_private_document.txt
+├── private
+│   └── oram
+└── public
+    └── node_0.oram
+    └── node_1.oram
+    └── node_2.oram
+    └── ...
+```
+
 # Example with remote storage
 
 In this example, we go through the setup of an ORAM that transparently synchronizes data to a remote FTP server.
@@ -153,71 +219,7 @@ When finished, unmount it:
 That's it! Files written/read to/from the private directory are encrypted and access patterns are hidden to the FTP
 server. For more details, make sure to read the Privacy section below.
 
-# How does it work?
 
-Instead of implementing a full filesystem, `oramfs` only provides a mounted file. Therefore, the user is expected to
-create a filesystem on top of that file using a loop device, the filesystem of their choice and finally mounting that
-filesystem. Note that such operations usually require root privileges and therefore `oramfs` should be run as root to
-work properly.
-
-`oramfs` takes a public directory as input and exposes a single private file, which is a proxy for read and write
-operations so that they are privacy-preserving thanks to an ORAM scheme.
-
-The mounted private file can be used to setup a loop device using `losetup`. Then, any filesystem, such as ext4 can be
-created on top of that loop device. `oramfs` automates this process, but also lets users do it manually if they want to.
-
-```
-+--------------------------------------------------------------+
-|                                                              |
-|                       ext4 filesystem                        | <---+ or any other FS or your choice
-|                                                              |
-+--------------------------------------------------------------+
-|                                                              |
-|                   Loop device (/dev/loop0)                   | <---+ created with losetup
-|                                                              |
-+--------------------------------------------------------------+
-|                                                              |
-|                         ORAMFS (FUSE)                        | <---+ Input  : *public* local directory
-|                                                              |       Output : *private* single file, 
-+-------------------+-----------------+------------------------+                for use with loop device
-|                   |                 |                        |
-|  Local directory  |  Cloud storage  |  Remote SSH directory  | <---+ Input directory can be anything
-|                   |                 |                        |       that appears as a local directory,
-+-------------------+-----------------+------------------------+       including mounted remote directories.
-                                                                       Examples: SSH, FTP, anything supported 
-                                                                       by rclone or similar tools, 
-                                                                       any mounted FUSE filesystem, etc.
-```
-
-Before using ORAMFS:
-
-```
-$ tree
-.
-├── private  <---+ empty directory
-└── public   <---+ this is the directory that the attacker can see ("public" directory)
-```
-
-When ORAMFS is in use, every operation done in "mnt" - or directly on the "oram" private file - appears ORAMified in
-the "public" directory. In the standard use case, the user does not directly modify the
-"oram" private file, but instead uses a higher level abstraction (the filesystem in the "mnt" directory). The user
-typically mounts their public cloud storage to the "public" directory before running ORAMFS, so that the public files
-are transparently synchronized to the cloud in a privacy-preserving way.
-
-```
-$ tree
-.
-├── mnt
-│   └── lost+found
-│   └── very_private_document.txt
-├── private
-│   └── oram
-└── public
-    └── node_0.oram
-    └── node_1.oram
-    └── node_2.oram
-    └── ...
-```
 
 # Configuration
 
