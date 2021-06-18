@@ -10,7 +10,7 @@
 * Supports **multiple ORAM schemes** - [Path ORAM](https://eprint.iacr.org/2013/280.pdf), etc.
 * Written in **Rust** - Avoids memory safety issues, great performance
 
-**DISCLAIMER** `oramfs` is a prototype and may not be ready for production. It may erase some of your data. Make sure to
+**[DISCLAIMER]** `oramfs` is a prototype and may not be ready for production. It may erase some of your data. Make sure to
 backup important data before using this software.
 
 # Introduction
