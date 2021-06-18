@@ -41,7 +41,12 @@ directory.
 
 Install Rust using [rustup](https://rustup.rs/) if it is not installed yet.
 
-First, build `oramfs` using `cargo`:
+In `/etc/fuse.conf`, make sure to enable the `user_allow_other` option.
+
+If not already installed, install the `libfuse-dev` (Debian-based systems) package using your package manager.
+For other systems, the package may be named differently.
+
+Then, build `oramfs` using `cargo`:
 
 ```
 cargo build --release

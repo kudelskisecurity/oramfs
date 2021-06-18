@@ -677,7 +677,7 @@ impl ORAMManager {
 
         // use resize2fs to extend to use max size
         let oram_file_path = Path::new(&args.mountpoint).join(BIG_FILE_NAME);
-        let output = Command::new("resize2fs")
+        let output = Command::new("/usr/bin/resize2fs")
             .arg("-f")
             .arg(&oram_file_path)
             .output()
@@ -687,7 +687,7 @@ impl ORAMManager {
         std::io::stderr().write_all(&output.stderr).unwrap();
 
         // unmount ORAM
-        Command::new("umount")
+        Command::new("/usr/bin/umount")
             .arg(args.mountpoint)
             .output()
             .expect("Failed to unmount ORAM.");
@@ -744,7 +744,7 @@ pub fn start(args: ORAMConfig, oramfs: Oramfs) {
     std::fs::create_dir_all(args.mountpoint.clone())
         .unwrap_or_else(|_| panic!("Failed to create mountpoint directory: {}", args.mountpoint));
 
-    let options = ["-o", "rw", "-o", "fsname=oramfs"]
+    let options = ["-o", "rw", "-o", "fsname=oramfs", "-o", "allow_root"]
         .iter()
         .map(|o| o.as_ref())
         .collect::<Vec<&OsStr>>();

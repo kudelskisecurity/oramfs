@@ -1,10 +1,12 @@
 use std::fs::File;
+use std::os::linux::fs::MetadataExt;
 use std::path::Path;
 use std::process::Command;
 use std::thread::sleep;
 use std::time::Duration;
 
 use daemonize::Daemonize;
+use runas::Command as SudoCommand;
 use structopt::StructOpt;
 
 use oramfs::ORAMConfig;
@@ -73,7 +75,7 @@ pub fn mount_filesystem(args: ORAMConfig) {
 
     if args.init {
         println!("Formatting EXT4 filesystem...");
-        if !Command::new("mkfs.ext4")
+        if !Command::new("/usr/bin/mkfs.ext4")
             .arg("-F")
             .arg(oram_file_path.clone())
             .status()
@@ -89,7 +91,7 @@ pub fn mount_filesystem(args: ORAMConfig) {
     std::fs::create_dir_all(Path::new(&private)).expect("Failed to create private directory");
 
     println!("Mounting directory...");
-    if !Command::new("mount")
+    if !SudoCommand::new("/usr/bin/mount")
         .arg("-o")
         .arg("sync")
         .arg(oram_file_path)
@@ -100,6 +102,29 @@ pub fn mount_filesystem(args: ORAMConfig) {
     {
         cleanup(args);
         panic!("Failed to mount directory");
+    }
+
+    // Set private directory owner to current user if not same as current user
+    let meta =
+        std::fs::metadata(private.clone()).expect("Failed to read private directory metadata");
+    let private_uid = meta.st_uid();
+    let current_uid = users::get_current_uid();
+
+    if private_uid != current_uid {
+        println!("Setting private directory owner...");
+        let current_user = users::get_user_by_uid(current_uid).unwrap();
+
+        if !SudoCommand::new("/usr/bin/chown")
+            .arg("-R")
+            .arg(current_user.name())
+            .arg(private.clone())
+            .status()
+            .unwrap()
+            .success()
+        {
+            cleanup(args);
+            panic!("Failed to mount directory");
+        }
     }
 
     println!(
@@ -114,15 +139,17 @@ pub fn mount_filesystem(args: ORAMConfig) {
 /// the private directory.
 pub fn cleanup(args: ORAMConfig) {
     println!("Unmounting private ORAM directory...");
-    Command::new("umount")
+    SudoCommand::new("/usr/bin/umount")
         .arg(args.private_directory)
-        .output()
+        .status()
         .expect("Failed to umount private ORAM directory");
 
+    sleep(Duration::from_millis(500));
+
     println!("Unmounting FUSE mountpoint...");
-    Command::new("umount")
+    Command::new("/usr/bin/umount")
         .arg(args.mountpoint)
-        .output()
+        .status()
         .expect("Failed to unmount FUSE mountpoint");
 
     println!("Cleanup complete!");
