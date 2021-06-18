@@ -6,7 +6,7 @@
 * Resizable ORAM - extend your ORAM when required!
 * **Cloud storage agnostic** - synchronize your files to any remote server that can be mounted as a local directory
 * **Filesystem agnostic** - ext4 is used by default. Manual mode let you use the filesystem you like.
-* Supports **multiple encryption ciphers** - ChaCha8, AES-CTR
+* Supports **multiple encryption ciphers** - ChaCha8, AES-CTR, AES-GCM
 * Supports **multiple ORAM schemes** - [Path ORAM](https://eprint.iacr.org/2013/280.pdf), etc.
 * Written in **Rust** - Avoids memory safety issues, great performance
 
@@ -31,7 +31,76 @@ private directory has an impact on the public directory. And if that public dire
 it is safely and transparently synchronized to the remote server whenever an operation is performed on the private
 directory.
 
-# Example
+# Requirements
+
+* Rust
+* `libfuse-dev` package on Debian-based systems
+
+# Getting started
+
+Install Rust using [rustup](https://rustup.rs/) if it is not installed yet.
+
+Note: for best performance, see the "Performance" section below.
+
+First, build `oramfs` using `cargo`:
+
+```
+cargo build --release
+```
+
+To get maximum performance, build in release mode and target the native CPU:
+
+```
+RUSTFLAGS="-Ctarget-cpu=native" cargo build --release
+```
+
+The `oramfs` binary will be created in the `target/release` directory. For convenience, add it to your `PATH`. Note that
+installing the binary can also be performed with `cargo install --path .`. It will be installed in `~/.cargo/bin` by
+default.
+
+```
+sudo su
+export PATH=$PATH:target/release
+```
+
+Then, create or mount a public directory to be protected by the ORAM, and a private directory:
+
+```
+mkdir public
+mkdir private
+```
+
+Finally, run the executable and create an ORAM configuration called `myoram`:
+
+```
+oramfs add myoram public/ private/
+```
+
+Follow the interactive instructions and complete the ORAM setup.
+
+Once the ORAM configuration is setup, the details are saved to `~/.config/oramfs/oramfs.yml`.
+
+Now the ORAM can be mounted and unmounted at any time using this configuration.
+
+```
+oramfs mount myoram
+```
+
+To unmount the ORAM:
+
+```
+oramfs umount myoram
+```
+
+To enlarge the ORAM, make sure it is unmounted first, then double its size:
+
+```
+oramfs enlarge myoram
+```
+
+Then it can be mounted as usual and its size will be larger than before.
+
+# Example with remote storage
 
 In this example, we go through the setup of an ORAM that transparently synchronizes data to a remote FTP server.
 
@@ -83,69 +152,6 @@ When finished, unmount it:
 
 That's it! Files written/read to/from the private directory are encrypted and access patterns are hidden to the FTP
 server. For more details, make sure to read the Privacy section below.
-
-# Requirements
-
-* Rust
-* `libfuse-dev` package on Debian-based systems
-
-# Getting started
-
-Install Rust using [rustup](https://rustup.rs/) if it is not installed yet.
-
-Note: for best performance, see the "Performance" section below.
-
-First, build `oramfs` using `cargo`:
-
-```
-cargo build --release
-```
-
-The `oramfs` binary will be created in the `target/release` directory. For convenience, add it to your `PATH`. Note that
-installing the binary can also be performed with `cargo install --path .`. It will be installed in `~/.cargo/bin` by
-default.
-
-```
-sudo su
-export PATH=$PATH:target/release
-```
-
-Then, create or mount a public directory to be protected by the ORAM, and a private directory:
-
-```
-mkdir public
-mkdir private
-```
-
-Finally, run the executable and create an ORAM configuration called `myoram`:
-
-```
-oramfs add myoram public/ private/
-```
-
-Follow the interactive instructions and complete the ORAM setup.
-
-Once the ORAM configuration is setup, the details are saved to `~/.config/oramfs/oramfs.yml`.
-
-Now the ORAM can be mounted and unmounted at any time using this configuration.
-
-```
-oramfs mount myoram
-```
-
-To unmount the ORAM:
-
-```
-oramfs umount myoram
-```
-
-To enlarge the ORAM, make sure it is unmounted first, then double its size:
-
-```
-oramfs enlarge myoram
-```
-
-Then it can be mounted as usual and its size will be larger than before.
 
 # How does it work?
 
@@ -212,22 +218,6 @@ $ tree
     └── node_2.oram
     └── ...
 ```
-
-# Building
-
-If performance is not an issue, for a quick build, run:
-
-```
-cargo build --release
-```
-
-To get maximum performance, build in release mode and target the native CPU architecture:
-
-```
-RUSTFLAGS="-Ctarget-cpu=native" cargo build --release
-```
-
-An executable will be produced in `target/release/oramfs`.
 
 # Configuration
 
