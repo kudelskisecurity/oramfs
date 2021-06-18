@@ -346,7 +346,7 @@ passing `--cipher aes-ctr`.
 To achieve the best performance, make sure to build or run using `cargo`'s `--release` flag and to pass
 the `RUSTFLAGS="-Ctarget-cpu=native"` environment variable.
 
-## Usage on SSD or flash storage
+# Usage on SSD or flash storage
 
 For each read or write operation, the ORAM scheme actually performs multiple operations under the scenes. Even for read
 operations, underlying write operations are performed. This can significantly reduce the lifespan of SSDs.
@@ -364,6 +364,8 @@ Code should be formatted with rustfmt. To automatically format the whole project
 ```
 cargo fmt
 ```
+
+No warnings should appear when running `cargo build` and `cargo clippy`. Additionally, all tests should pass (See Testing section).
 
 # License and Copyright
 
