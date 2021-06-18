@@ -659,7 +659,11 @@ mod tests {
     fn test_encryption() {
         let disable_encryption = false;
         let mut args = cli_for_oram(disable_encryption);
-        args.cipher = "chacha8".to_string();
+        args.cipher = "aes-gcm".to_string();
+        args.encrypted_encryption_key =
+            "A38eJ8oREvmjEMVTAA68+m8KceZWaJ3vYlOrXo0Qe+Q=:ZDLbGGMuPSLeNycz".to_string();
+        args.encryption_passphrase = "a".to_string();
+        args.salt = "OS6qK/8mJA22SMWANwsiaw".to_string();
         let io = Box::new(MemoryIOService::new());
 
         let mut pathoram = PathORAM::new(&args, io);
