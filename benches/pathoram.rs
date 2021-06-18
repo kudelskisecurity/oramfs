@@ -1,6 +1,6 @@
 use criterion::{criterion_group, criterion_main, Criterion};
 
-use oramfs::{get_io, BaseORAM, ORAMConfig, PathORAM, ORAMFS};
+use oramfs::{get_io, BaseORAM, ORAMConfig, Oramfs, PathORAM};
 
 pub fn cli_for_oram(oram: String, disable_encryption: bool) -> ORAMConfig {
     let mut args = ORAMConfig {
@@ -50,7 +50,7 @@ fn bench_throughput(c: &mut Criterion) {
         oram.init();
     }
     let oram_size = oram.size() as u64;
-    let mut oramfs = ORAMFS {
+    let mut oramfs = Oramfs {
         oram: Box::new(oram),
         oram_size,
         args: &args,

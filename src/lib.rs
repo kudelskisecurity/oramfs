@@ -10,7 +10,7 @@ pub use oram::get_oram;
 pub use oram::pathoram::tree::TreeNode;
 pub use oram::pathoram::PathORAM;
 pub use oram::BaseORAM;
-pub use oram::ORAMFS;
+pub use oram::Oramfs;
 
 mod cli;
 mod fs;

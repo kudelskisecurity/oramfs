@@ -1,4 +1,4 @@
-use oramfs::ORAMFS;
+use oramfs::Oramfs;
 
 mod oram;
 
@@ -8,7 +8,7 @@ fn test_copy_file_and_check() {
     let mut args = oram::cli_for_oram("fakeoram".to_string(), disable_encryption);
     args.init = false;
 
-    let mut oramfs = ORAMFS::new(&args);
+    let mut oramfs = Oramfs::new(&args);
     oramfs.oram.init(); // call it manually because init is false
 
     // generate file in memory

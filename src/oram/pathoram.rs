@@ -70,6 +70,12 @@ impl BaseORAM for PathORAM<'_> {
         debug!("...done!");
     }
 
+    /// Save the stash and position map after each operation.
+    /// This should prevent data loss in case the process is killed before unmounting.
+    fn post_op(&mut self) {
+        self.save();
+    }
+
     /// Delegate read operations to the access() method of Path ORAM
     fn read(&mut self, block_id: i64) -> Vec<u8> {
         let read_bytes = self.access("read", block_id, None);
@@ -95,12 +101,6 @@ impl BaseORAM for PathORAM<'_> {
 
     fn args(&self) -> &ORAMConfig {
         self.args
-    }
-
-    /// Save the stash and position map after each operation.
-    /// This should prevent data loss in case the process is killed before unmounting.
-    fn post_op(&mut self) {
-        self.save();
     }
 }
 
@@ -255,10 +255,8 @@ impl<'a> PathORAM<'a> {
     /// Load the encryption key
     ///
     /// Unless encryption is disabled, this loads the encryption key.
-    /// This is achieved, either by reading it from the specified file,
-    /// or by deriving it from the given passphrase.
-    /// If a passphrase was supplied, the derived key is automatically
-    /// stretched to the appropriate size for the selected cipher.
+    /// This is achieved by deriving a master key from the given passphrase, and then
+    /// using this master key to decrypt the actual encryption key for this ORAM.
     pub fn load_encryption_key(&mut self) {
         if !self.args.disable_encryption {
             let derived_key =
@@ -308,7 +306,7 @@ impl<'a> PathORAM<'a> {
     }
 
     /// Initialize the position map with random values.
-    /// Each block is assigned to a random xth leaf in the tree, where x in 0..leaves_count
+    /// Each block is assigned to a random xth leaf in the tree, where x is in 0..leaves_count
     pub fn init_position_map(&mut self) -> HashMap<i64, HashMap<i64, i64>> {
         let block_count = self.args.n * self.args.z;
         let mut block_ids: Vec<i64> = (0..block_count).collect();
@@ -356,6 +354,7 @@ impl<'a> PathORAM<'a> {
         rbmap
     }
 
+    /// Insert into a map<i64, map<i64, i64>> more easily
     pub fn mapmap_insert(
         rbmap: &mut HashMap<i64, HashMap<i64, i64>>,
         bucket_id: &i64,

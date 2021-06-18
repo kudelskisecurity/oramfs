@@ -9,7 +9,7 @@ use structopt::StructOpt;
 
 use oramfs::ORAMConfig;
 use oramfs::ORAMManager;
-use oramfs::ORAMFS;
+use oramfs::Oramfs;
 use oramfs::{start, CLISubCommand};
 use oramfs::{CLIArgs, BIG_FILE_NAME};
 
@@ -24,7 +24,7 @@ fn start_oram(args: &mut ORAMConfig) {
     }
 
     println!("Starting ORAM...");
-    let oramfs = ORAMFS::new(&args);
+    let oramfs = Oramfs::new(&args);
 
     if !args.foreground {
         let stdout_log_path = "/tmp/oramfs.out";

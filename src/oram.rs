@@ -58,13 +58,13 @@ pub trait BaseORAM: Send {
 }
 
 /// ORAMFS holds the ORAM, and some parameters
-pub struct ORAMFS<'a> {
+pub struct Oramfs<'a> {
     pub args: &'a ORAMConfig,
     pub oram_size: u64,
     pub oram: Box<dyn BaseORAM + 'a>,
 }
 
-impl<'a> ORAMFS<'a> {
+impl<'a> Oramfs<'a> {
     /// Create a new ORAMFS
     pub fn new(args: &'a ORAMConfig) -> Self {
         let io = get_io(&args);
@@ -215,12 +215,12 @@ pub fn get_oram<'a>(
 
 #[cfg(test)]
 mod tests {
-    use crate::ORAMFS;
+    use crate::Oramfs;
 
     #[test]
     pub fn test_params_for_size() {
         let oram_size = 1_000_000_000;
-        let (n, z, b) = ORAMFS::params_for_size(oram_size);
+        let (n, z, b) = Oramfs::params_for_size(oram_size);
         assert_eq!((n, z, b), (1023, 6, 262144))
     }
 }

@@ -8,7 +8,7 @@ use libc::{c_int, ENOENT};
 use log::info;
 use time::Timespec;
 
-use crate::ORAMFS;
+use crate::Oramfs;
 
 const TTL: Timespec = Timespec { sec: 1, nsec: 0 };
 const UNIX_EPOCH: Timespec = Timespec { sec: 0, nsec: 0 };
@@ -53,7 +53,7 @@ const BIG_FILE_ATTR: FileAttr = FileAttr {
 };
 
 /// Implement the FUSE operations necessary to get the ORAMFS working
-impl Filesystem for ORAMFS<'_> {
+impl Filesystem for Oramfs<'_> {
     fn init(&mut self, _req: &Request) -> Result<(), c_int> {
         Ok(())
     }

@@ -15,7 +15,7 @@ use question::{Answer, Question};
 use rand::{thread_rng, Rng};
 use serde::{Deserialize, Serialize};
 
-use crate::{get_io, BaseORAM, CLISubCommand, PathORAM, BIG_FILE_NAME, ORAMFS};
+use crate::{get_io, BaseORAM, CLISubCommand, Oramfs, PathORAM, BIG_FILE_NAME};
 
 const ORAMFS_CONFIG_FILE_PATH: &str = "~/.config/oramfs/oramfs.yml";
 
@@ -54,6 +54,7 @@ impl ORAMManager {
         String::from(&*shellexpand::tilde(ORAMFS_CONFIG_FILE_PATH))
     }
 
+    /// List ORAMs
     pub fn list_orams(oneline: bool) {
         if let Ok(f) = std::fs::File::open(Self::config_path()) {
             let config: ORAMFSConfig = serde_yaml::from_reader(f).expect("Failed to load config");
@@ -72,6 +73,7 @@ impl ORAMManager {
         }
     }
 
+    /// Add an ORAM
     pub fn add_oram(oram_name: String, cmd: CLISubCommand) {
         let mut config = Self::get_config();
 
@@ -172,6 +174,7 @@ impl ORAMManager {
         };
     }
 
+    /// Remove an ORAM
     pub fn remove_oram(oram_name: String) {
         let mut config = Self::get_config();
 
@@ -193,6 +196,7 @@ impl ORAMManager {
         println!("Successfully removed ORAM {}.", oram_name);
     }
 
+    /// Get global configuration
     pub fn get_config() -> ORAMFSConfig {
         match std::fs::File::open(Self::config_path()) {
             Ok(f) => {
@@ -211,6 +215,7 @@ impl ORAMManager {
         }
     }
 
+    /// Get a specific ORAM's configuration
     pub fn get_oram_config(name: String) -> ORAMConfig {
         let config = Self::get_config();
         for oram_config in config.orams {
@@ -221,6 +226,7 @@ impl ORAMManager {
         panic!("No such config: {}", name);
     }
 
+    /// Save configuration to disk
     pub fn save_config(config: &ORAMFSConfig) {
         let file = fs::OpenOptions::new()
             .write(true)
@@ -237,6 +243,7 @@ impl ORAMManager {
         serde_yaml::to_writer(file, config).expect("Failed to write file");
     }
 
+    /// Mark ORAM with name `name` as init=true and save configuration to disk
     pub fn mark_init(name: String) {
         let mut config = Self::get_config();
 
@@ -248,6 +255,7 @@ impl ORAMManager {
         Self::save_config(&config);
     }
 
+    /// Generate an encryption key and save it (encrypted) in the ORAM's configuration
     pub fn generate_encryption_key(
         name: String,
         passphrase: String,
@@ -288,12 +296,14 @@ impl ORAMManager {
         encrypted_encryption_key
     }
 
+    /// Serialize encrypted key and nonce
     pub fn serialize_key(encrypted_key: Vec<u8>, nonce: Vec<u8>) -> String {
         let key = base64::encode(encrypted_key);
         let n = base64::encode(nonce);
         format!("{}:{}", key, n)
     }
 
+    /// Deserialize encrypted key and nonce
     pub fn deserialize_key(serialized_key: String) -> (Vec<u8>, Vec<u8>) {
         let splits: Vec<&str> = serialized_key.split(':').collect();
         let b64_key = splits[0];
@@ -303,6 +313,7 @@ impl ORAMManager {
         (key, nonce)
     }
 
+    /// Encrypt encryption key using AES256-GCM and return ciphertext and nonce
     pub fn encrypt_key(
         key: Vec<u8>,
         cleartext: Vec<u8>,
@@ -322,6 +333,7 @@ impl ORAMManager {
         Ok((ciphertext, nonce.to_vec()))
     }
 
+    /// Decrypt encryption key
     pub fn decrypt_key(
         key: Vec<u8>,
         ciphertext: Vec<u8>,
@@ -340,6 +352,28 @@ impl ORAMManager {
         Ok(cleartext)
     }
 
+    /// Derive a key from the given passphrase and salt
+    pub fn derive_key(passphrase: &str, salt: &str) -> Vec<u8> {
+        let salt = argon2::password_hash::SaltString::new(salt).expect("Failed to parse salt");
+        let password = passphrase.as_bytes();
+        let argon2 = argon2::Argon2::default();
+
+        let params = argon2::Params {
+            ..Default::default() // use default params
+        };
+
+        let output = argon2
+            .hash_password(password, None, params, salt.as_salt())
+            .unwrap()
+            .hash
+            .unwrap();
+        let derived_key = Vec::from(output.as_bytes());
+        derived_key
+    }
+
+    /// Return true if the given passphrase is valid
+    /// This effectively tries to decrypt the AEAD encrypted key.
+    /// If the passphrase is not the right one, this will fail.
     pub fn is_passphrase_valid(
         passphrase: String,
         salt: String,
@@ -375,7 +409,7 @@ impl ORAMManager {
 
             match trimmed.parse::<i64>() {
                 Ok(oram_size) => {
-                    let (n, z, b) = ORAMFS::params_for_size(oram_size);
+                    let (n, z, b) = Oramfs::params_for_size(oram_size);
                     args.n = n;
                     args.z = z;
                     args.b = b;
@@ -392,6 +426,7 @@ impl ORAMManager {
         }
     }
 
+    /// Interactively ask the client data directory from the user
     pub fn ask_client_data_dir(args: &mut ORAMConfig) {
         let mut client_data_dir_input = String::new();
         let default_client_data_dir = format!("/etc/oramfs/{}", args.name);
@@ -412,6 +447,7 @@ impl ORAMManager {
         args.client_data_dir = client_data_dir;
     }
 
+    // Interactively ask the mountpoint directory from the user
     pub fn ask_mountpoint(args: &mut ORAMConfig) {
         let mut mountpoint_input = String::new();
         let default_mountpoint = get_default_mountpoint(args);
@@ -432,10 +468,14 @@ impl ORAMManager {
         args.mountpoint = mountpoint;
     }
 
+    /// Return temporary filename
+    /// This is useful for the enlarge operation
     pub fn tmp_filename(old: i64, i: i64) -> String {
         format!("node_{}_{}.oram", old, i)
     }
 
+    /// Return temporary filepath
+    /// This is useful for the enlarge operation
     pub fn unique_tmp_node_path(old: i64, i: i64, args: &ORAMConfig) -> String {
         let filename = Self::tmp_filename(old, i);
         let path = Path::new(&args.public_directory);
@@ -511,6 +551,7 @@ impl ORAMManager {
         };
     }
 
+    /// Actually enlarge the ORAM
     pub fn do_double(args: &mut ORAMConfig, manual: bool) {
         let mut config = Self::get_config();
 
@@ -616,7 +657,7 @@ impl ORAMManager {
         }
 
         if daemonize.start().is_ok() {
-            let oramfs = ORAMFS {
+            let oramfs = Oramfs {
                 args: &args_clone,
                 oram_size,
                 oram: Box::new(pathoram),
@@ -625,6 +666,7 @@ impl ORAMManager {
         };
     }
 
+    /// Run resize2fs on the ORAM file
     pub fn resize2fs_enlarge(args: ORAMConfig) {
         sleep(Duration::from_millis(500));
 
@@ -646,6 +688,7 @@ impl ORAMManager {
             .expect("Failed to unmount ORAM.");
     }
 
+    /// Interactively ask the passphrase from the user
     pub fn get_passphrase() -> String {
         let prompt = "Please enter your passphrase to unlock the ORAM:";
         let passphrase =
@@ -654,6 +697,8 @@ impl ORAMManager {
         String::from(passphrase.trim())
     }
 
+    /// Interactively ask for a new passphrase from the user
+    /// This will ask twice to confirm and make sure that both passphrases match
     pub fn get_passphrase_first_time() -> String {
         let mut passphrase_match = false;
         let mut final_passphrase = String::new();
@@ -679,25 +724,6 @@ impl ORAMManager {
 
         final_passphrase
     }
-
-    /// Derive a key from the given passphrase and salt
-    pub fn derive_key(passphrase: &str, salt: &str) -> Vec<u8> {
-        let salt = argon2::password_hash::SaltString::new(salt).expect("Failed to parse salt");
-        let password = passphrase.as_bytes();
-        let argon2 = argon2::Argon2::default();
-
-        let params = argon2::Params {
-            ..Default::default() // use default params
-        };
-
-        let output = argon2
-            .hash_password(password, None, params, salt.as_salt())
-            .unwrap()
-            .hash
-            .unwrap();
-        let derived_key = Vec::from(output.as_bytes());
-        derived_key
-    }
 }
 
 /// Get a directory in /tmp matching the oram name such as /tmp/oramfs_{oram_name}
@@ -708,7 +734,7 @@ fn get_default_mountpoint(args: &mut ORAMConfig) -> String {
 }
 
 /// Start the ORAMFS
-pub fn start(args: ORAMConfig, oramfs: ORAMFS) {
+pub fn start(args: ORAMConfig, oramfs: Oramfs) {
     // create mountpoint directory if not exists
     std::fs::create_dir_all(args.mountpoint.clone())
         .unwrap_or_else(|_| panic!("Failed to create mountpoint directory: {}", args.mountpoint));
@@ -723,6 +749,7 @@ pub fn start(args: ORAMConfig, oramfs: ORAMFS) {
     println!("Goodbye.");
 }
 
+/// Check whether the given directory is empty
 pub fn is_directory_empty(path: &str) -> Result<bool, Error> {
     Ok(fs::read_dir(path)?.next().is_none())
 }

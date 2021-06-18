@@ -1,4 +1,4 @@
-use oramfs::{get_io, ORAMFS};
+use oramfs::{get_io, Oramfs};
 use oramfs::{BaseORAM, PathORAM};
 
 mod oram;
@@ -39,7 +39,7 @@ fn copy_file_and_check() {
         oram.init();
     }
     let oram_size = oram.size() as u64;
-    let mut oramfs = ORAMFS {
+    let mut oramfs = Oramfs {
         oram: Box::new(oram),
         oram_size,
         args: &args,
