@@ -17,6 +17,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{get_io, BaseORAM, CLISubCommand, Oramfs, PathORAM, BIG_FILE_NAME};
 
+const ORAMFS_CONFIG_DIR_PATH: &str = "~/.config/oramfs";
 const ORAMFS_CONFIG_FILE_PATH: &str = "~/.config/oramfs/oramfs.yml";
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -434,7 +435,8 @@ impl ORAMManager {
     /// Interactively ask the client data directory from the user
     pub fn ask_client_data_dir(args: &mut ORAMConfig) {
         let mut client_data_dir_input = String::new();
-        let default_client_data_dir = format!("/etc/oramfs/{}", args.name);
+        let config_dir = String::from(shellexpand::tilde(ORAMFS_CONFIG_DIR_PATH));
+        let default_client_data_dir = format!("{}/{}", config_dir, args.name);
         println!(
             "Please enter path to client data directory to use, or press enter to use default [default: {}]:",
             default_client_data_dir
