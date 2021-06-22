@@ -206,7 +206,7 @@ Please enter desired ORAM total size in bytes,
 or press enter to use default [default: 16000000 (16 MB)]:
 
 Adjusting ORAM size to closest valid value: 16711680 bytes
-Please enter path to client data directory to use, or press enter to use default [default: /etc/oramfs/myoram]:
+Please enter path to client data directory to use, or press enter to use default [default: /home/foobar/.config/oramfs/myoram]:
 
 Please enter path to mointpoint directory to use, or press enter to use default [default: /tmp/oramfs_myoram]:
 
