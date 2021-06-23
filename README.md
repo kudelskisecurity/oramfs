@@ -37,7 +37,7 @@ directory.
 # Requirements
 
 * Rust
-* `libfuse-dev` package on Debian-based systems
+* FUSE (`libfuse-dev` package on Debian-based systems, `fuse` package on Arch)
 
 # Getting started
 
