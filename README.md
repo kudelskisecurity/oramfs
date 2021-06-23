@@ -363,7 +363,7 @@ operation.
 To avoid read caching, on Linux, always clear the kernel cache before reading a file from the ORAM:
 
 ```
-sync; echo 1 > /proc/sys/vm/drop_caches
+# sync; echo 1 > /proc/sys/vm/drop_caches
 ```
 
 # Testing
