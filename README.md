@@ -68,7 +68,6 @@ installing the binary can also be performed with `cargo install --path .`. It wi
 default.
 
 ```
-sudo su
 export PATH=$PATH:target/release
 ```
 
@@ -256,13 +255,12 @@ oramfs mount myoram --foreground
 ## Manual mode
 
 For maximum control, manual mode can be used (`--manual`). Mount ORAMFS using Path ORAM (with explicit parameters). The
-mounted ORAMFS appears as a file under `private/oram`.
+mounted ORAMFS appears as a file under the specified mountpoint directory. By default, it is in `/tmp/oramfs_{ORAM_NAME}/oram`.
 
 ```
 mkdir private
 mkdir public
-mkdir client-data
-sudo su
+oramfs add myoram public/ private/
 oramfs mount myoram --manual
 ```
 
@@ -270,16 +268,14 @@ Since manual mode does not automatically mount a file system for you, you must d
 filesystem on top of the ORAM. Note that `mount` automatically creates a loop device for us:
 
 ```
-sudo su
-mkfs.ext4 private/oram
-mkdir mnt
-mount -o sync private/oram mnt/
-echo "hello oram" > mnt/hello.txt
+mkfs.ext4 /tmp/oramfs_myoram/oram
+mount -o sync /tmp/oramfs_myoram/oram private/
+echo "hello oram" > private/hello.txt
 ```
 
 ## Using another filesystem than ext4
 
-`oramfs` supports any filesystem. To use something different than the default ext4, do the following.
+`oramfs` supports any filesystem. To use something different from the default ext4, do the following.
 
 During initialization, pass the `--manual` flag, then manually create the filesystem of your choice on the `oram` file
 in the mountpoint directory. Here is an example with ext3:
