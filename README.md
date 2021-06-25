@@ -2,12 +2,15 @@
 
 [![Rust 1.49+](https://img.shields.io/badge/Rust-1.49+-green.svg)](https://blog.rust-lang.org/2020/12/31/Rust-1.49.0.html) [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](http://www.gnu.org/licenses/gpl-3.0)
 
+Oramfs provides a fully encrypted and optionally authenticated Oblivious RAM filesystem. Not only does it protect your data, 
+but it also prevents remote attackers from observing data access patterns.
+
 `oramfs` features:
 
-* ORAM - encrypt files and hide read/write access patterns from remote storage
-* Resizable ORAM - extend your ORAM when required!
+* ORAM - encrypt files and hide read/write access patterns from remote storage. Enhanced privacy!
+* Resizable ORAM - extend your ORAM when more space is required!
 * **Cloud storage agnostic** - synchronize your files to any remote server that can be mounted as a local directory
-* **Filesystem agnostic** - ext4 is used by default. Manual mode let you use the filesystem you like.
+* **Filesystem agnostic** - ext4 is used by default. Manual mode lets you use the filesystem you like.
 * Supports **multiple encryption ciphers** - ChaCha8, AES-CTR, AES-GCM
 * Supports **multiple ORAM schemes** - [Path ORAM](https://eprint.iacr.org/2013/280.pdf), etc.
 * Written in **Rust** - Avoids memory safety issues, great performance
@@ -15,10 +18,10 @@
 **[DISCLAIMER]** `oramfs` is a prototype and may not be ready for production. It may erase some of your data. Make sure to
 backup important data before using this software.
 
-# Introduction
+# Why use oramfs?
 
 On an encrypted filesystem, an ORAM prevents an attacker from knowing whether read or write operations are performed and
-which parts of the filesystem are accessed. This privacy comes with a loss of performance.
+which parts of the filesystem are accessed. This enhanced privacy comes with a loss of performance.
 
 To setup the ORAM, two inputs are required. A public directory and a private directory. The public directory can be seen
 as the server and the private directory as the client.
