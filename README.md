@@ -339,6 +339,30 @@ ORAM, so proceed with caution when initializing an ORAM.
 To achieve the best performance, make sure to build or run using `cargo`'s `--release` flag and to pass
 the `RUSTFLAGS="-Ctarget-cpu=native"` environment variable.
 
+## Benchmarks
+
+`oramfs` was compared to [UtahFS](https://github.com/cloudflare/utahfs).
+Oramfs was used with default values (AES-GCM, 16MB oram size).
+UtahFS was used with a local disk and the `oram` option was set to true.
+
+Note that performance is highly sensitive to the choice of `n`, `z` and `b` parameters in `oramfs`.
+In this benchmark, the defaults were used for 10MB. Then the ORAM was enlarged (`n` was doubled) for 25 MB.
+
+### Read performance
+
+| File size | oramfs | UtahFS | Speedup |
+| --- | --- | --- | --- |
+| 10 MB | 1sec | 9 sec | 9x |
+| 25 MB | 3 sec | 26.5 sec | 8.8x |
+
+### Write performance
+
+| File size | oramfs | UtahFS | Speedup |
+| --- | --- | --- | --- | --- | --- | --- |
+| 10 MB | 15 sec | 30 sec | 2x |
+| 25 MB | 50 sec | 95 sec | 1.9x |
+
+
 # Usage on SSD or flash storage
 
 For each read or write operation, the ORAM scheme actually performs multiple operations under the scenes. Even for read
