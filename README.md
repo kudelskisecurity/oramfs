@@ -203,7 +203,7 @@ rclone mount --daemon --allow-other --dir-cache-time 1s --poll-interval 1s --vfs
 Create an ORAM called `myoram`:
 
 ```
-# oramfs add myoram public/ private/
+$ oramfs add myoram public/ private/
 Please enter desired ORAM total size in bytes,
 or press enter to use default [default: 16000000 (16 MB)]:
 
@@ -218,14 +218,14 @@ Successfully added ORAM myoram.
 Mount the ORAM, write a file to it:
 
 ```
-# oramfs mount myoram
-# echo hello world > private/somefile
+$ oramfs mount myoram
+$ echo hello world > private/somefile
 ```
 
 When finished, unmount it:
 
 ```
-# oramfs unmount myoram
+$ oramfs unmount myoram
 ```
 
 That's it! Files written/read to/from the private directory are encrypted and access patterns are hidden to the FTP
