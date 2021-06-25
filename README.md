@@ -2,7 +2,7 @@
 
 [![Rust 1.49+](https://img.shields.io/badge/Rust-1.49+-green.svg)](https://blog.rust-lang.org/2020/12/31/Rust-1.49.0.html) [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](http://www.gnu.org/licenses/gpl-3.0)
 
-Oramfs provides a fully encrypted and optionally authenticated Oblivious RAM filesystem. Not only does it protect your data, 
+Oramfs provides a fully encrypted and optionally authenticated Oblivious RAM filesystem. Not only does it preserve data confidentiality, 
 but it also prevents remote attackers from observing data access patterns.
 
 `oramfs` features:
