@@ -358,7 +358,7 @@ In this benchmark, the defaults were used for 10MB. Then the ORAM was enlarged (
 ### Write performance
 
 | File size | oramfs | UtahFS | Speedup |
-| --- | --- | --- | --- | --- | --- | --- |
+| --- | --- | --- | --- |
 | 10 MB | 15 sec | 30 sec | 2x |
 | 25 MB | 50 sec | 95 sec | 1.9x |
 
