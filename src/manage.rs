@@ -575,8 +575,6 @@ impl ORAMManager {
             }
         }
 
-        Self::save_config(&config);
-
         // ask for passphrase
         let passphrase = Self::get_passphrase();
         args.encryption_passphrase = passphrase;
@@ -586,6 +584,8 @@ impl ORAMManager {
         let mut pathoram = PathORAM::new(&args, io);
 
         pathoram.load();
+
+        Self::save_config(&config);
 
         // existing blocks: update leafid = leafid * 2
         for (_block_id, leaf_id) in pathoram.position_map.iter_mut() {
