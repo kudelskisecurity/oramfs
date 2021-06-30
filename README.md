@@ -177,7 +177,7 @@ $ tree
 ```
 
 ```
->$ tree /tmp/oramfs_myoram/
+$ tree /tmp/oramfs_myoram/
 /tmp/oramfs_myoram/
 └── oram
 ```
