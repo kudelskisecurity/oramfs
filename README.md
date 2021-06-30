@@ -161,20 +161,27 @@ abstraction (the filesystem in the "private" directory).
 The user  typically mounts their public cloud storage to the "public" directory before running ORAMFS, so that 
 the public files are transparently synchronized to the cloud in a privacy-preserving way.
 
+When ORAMFS is in use:
+
 ```
 $ tree
 .
-├── mnt
+├── private
 │   └── lost+found
 │   └── very_private_document.txt
-├── private
-│   └── oram
 └── public
     └── node_0.oram
     └── node_1.oram
     └── node_2.oram
     └── ...
 ```
+
+```
+>$ tree /tmp/oramfs_myoram/
+/tmp/oramfs_myoram/
+└── oram
+```
+
 
 # Example with remote storage
 
