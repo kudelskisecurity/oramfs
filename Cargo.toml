@@ -3,6 +3,11 @@ name = "oramfs"
 version = "1.0.0"
 authors = ["Nils Amiet <nils.amiet@kudelskisecurity.com>"]
 edition = "2018"
+license = "GPL-3.0"
+description = "Oramfs provides a fully encrypted and optionally authenticated Oblivious RAM filesystem."
+homepage = "https://github.com/kudelskisecurity/oramfs"
+repository = "https://github.com/kudelskisecurity/oramfs"
+readme = "README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
