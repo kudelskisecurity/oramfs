@@ -587,9 +587,11 @@ impl ORAMManager {
 
         Self::save_config(&config);
 
-        // existing blocks: update leafid = leafid * 2
+        // existing blocks: update leafid = leafid * 2 + rand(0 or 1)
         for (_block_id, leaf_id) in pathoram.position_map.iter_mut() {
-            *leaf_id *= 2;
+            // randomly reassign block id to leaf_id * 2 or the one to the right
+            let rnd: i64 = thread_rng().gen_range(0, 2);
+            *leaf_id = *leaf_id * 2 + rnd;
         }
 
         // new blocks: distribute z blocks per leaf
